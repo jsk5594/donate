@@ -6,6 +6,7 @@ import { HealthBadge, StatusBadge } from "@/components/HealthBadge";
 import { fmtDate, pct, won } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
 import { legalFundraisingCap } from "@/lib/rules";
+import { organizationByName } from "@/lib/org-data";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
   const ended = new Date(campaign.endDate) < new Date();
   const per10k = Math.round((sheet.outflow.program / t) * 10000);
   const cap = legalFundraisingCap(sheet.inflow.total);
+  const org = organizationByName(campaign.organizer);
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,9 +47,16 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
         </div>
         <div className="flex items-center gap-2">
           <HealthBadge level={health.overall} size="md" />
-          <Link href={`/reports/new?campaign=${campaign.id}`} className="rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold hover:bg-[#F3F5F8]">
-            보고서 작성
-          </Link>
+          {org && (
+            <Link href={`/organizations/${org.id}`} className="rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold hover:bg-[#F3F5F8]">
+              주관기관 AI 감사
+            </Link>
+          )}
+          {campaign.status === "완료" && (
+            <Link href={`/reports/${campaign.id}`} className="rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold hover:bg-[#F3F5F8]">
+              AI 결산 보고서
+            </Link>
+          )}
         </div>
       </header>
 

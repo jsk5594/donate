@@ -148,14 +148,3 @@ export interface RulePost {
   body: string[]; // 문단 배열(개조식 허용)
   sources: { title: string; url: string }[];
 }
-
-export interface ReportDraft {
-  id: string;
-  campaignId: string;
-  periodFrom: string;
-  periodTo: string;
-  title: string;
-  body: string;
-  createdAt: string;
-  generatedBy: "template" | "llm";
-}

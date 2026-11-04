@@ -38,16 +38,10 @@ interface Props {
 export function BalanceSheetChart({ sheet, selected, onSelect, height = 380, compact = false }: Props) {
   const segs = segmentsOf(sheet);
   const total = Math.max(sheet.inflow.total, sheet.outflow.total, 1);
-  const balanced = Math.abs(sheet.difference) < 1;
-
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-start">
+    <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
       <Column side="in" title="기부받은 돈 (차변)" caption="누가 보냈나" segs={segs} sheet={sheet} total={total} height={height} selected={selected} compact={compact} onSelect={onSelect} />
-      <div className="flex shrink-0 flex-col items-center justify-center gap-1 self-center px-1 md:pt-24">
-        <span className="text-2xl font-bold text-muted" aria-hidden="true">=</span>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${balanced ? "bg-ok-bg text-ok" : "bg-bad-bg text-bad"}`}>{balanced ? "차액 0원" : `차액 ${won(sheet.difference)}`}</span>
-      </div>
       <Column side="out" title="쓰인 돈 + 잔액 (대변)" caption="어디에 갔나" segs={segs} sheet={sheet} total={total} height={height} selected={selected} compact={compact} onSelect={onSelect} />
     </div>
   );
@@ -70,6 +64,8 @@ function Column({ side, title, caption, segs, sheet, total, height, selected, co
           const h = (s.amount / total) * height;
           const isSel = selected === s.key;
           const dim = selected !== null && !isSel;
+          // 미집행 잔액은 '아직 쓰이지 않은 돈'이라 점선 테두리 + 옅은 배경으로 구분한다.
+          const pending = s.key === "balance";
           return (
             <button
               key={s.key}
@@ -81,10 +77,11 @@ function Column({ side, title, caption, segs, sheet, total, height, selected, co
               className="relative w-full cursor-pointer text-left outline-none transition-[opacity,filter] focus-visible:ring-2 focus-visible:ring-primary"
               style={{
                 height: Math.max(h, 8),
-                background: s.color,
+                background: pending ? `color-mix(in srgb, ${s.color} 35%, transparent)` : s.color,
+                border: pending ? `2px dashed ${isSel ? "#15202B" : "#5b6878"}` : undefined,
                 opacity: dim ? 0.35 : 1,
                 filter: isSel ? "brightness(1.08)" : undefined,
-                boxShadow: isSel ? "inset 0 0 0 3px #15202B" : "inset 0 -1px 0 rgba(255,255,255,.5)",
+                boxShadow: pending ? undefined : isSel ? "inset 0 0 0 3px #15202B" : "inset 0 -1px 0 rgba(255,255,255,.5)",
               }}
             >
               {h >= 34 && (
@@ -108,7 +105,11 @@ function Column({ side, title, caption, segs, sheet, total, height, selected, co
                   onClick={() => onSelect(isSel ? null : s.key)}
                   className={`flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-[13px] hover:bg-[#F3F5F8] ${isSel ? "bg-[#F3F5F8] font-semibold" : ""}`}
                 >
-                  <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: s.color }} aria-hidden="true" />
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-sm"
+                    style={s.key === "balance" ? { background: `color-mix(in srgb, ${s.color} 35%, transparent)`, border: "1.5px dashed #5b6878" } : { background: s.color }}
+                    aria-hidden="true"
+                  />
                   <span className="min-w-0 flex-1 truncate">{s.label}</span>
                   <span className="shrink-0 text-muted tnum">{pct(colTotal ? s.amount / colTotal : 0)}</span>
                   <span className="w-28 shrink-0 text-right tnum">{won(s.amount)}</span>

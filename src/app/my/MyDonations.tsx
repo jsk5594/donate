@@ -5,9 +5,10 @@ import { useState } from "react";
 import { fmtDateTime, pct, won } from "@/lib/format";
 import type { MyDonationsResult } from "@/lib/repository";
 
-export function MyDonations({ samples }: { samples: { code: string; alias: string; count: number }[] }) {
-  const [code, setCode] = useState("");
-  const [result, setResult] = useState<MyDonationsResult | null>(null);
+/** initialCode/initialResult: 챗봇 등에서 /my?code=D-XXXX 로 들어오면 서버에서 미리 조회한 결과 */
+export function MyDonations({ samples, initialCode, initialResult }: { samples: { code: string; alias: string; count: number }[]; initialCode?: string; initialResult?: MyDonationsResult | null }) {
+  const [code, setCode] = useState(initialCode ?? "");
+  const [result, setResult] = useState<MyDonationsResult | null>(initialResult ?? null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 

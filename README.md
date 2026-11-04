@@ -22,9 +22,11 @@ Node 20+ 권장. 현재는 **가상 데이터**로 동작하며 외부 서비스
 | `/campaigns/[id]` | 세부 항목(거제도 홍수 등) 대차대조표, 운영 세칙 6개 항목 판정, 최근 입출금 |
 | `/monitor` | 전체 모집건 판정 표(위반·주의·양호) |
 | `/rules`, `/rules/[slug]` | 기부금 운영 세칙 게시판(8개 장) |
-| `/reports`, `/reports/[id]`, `/reports/new` | 공개보고서 목록·열람·작성(원장 기반 초안 + 선택적 LLM 다듬기) |
-| `/my` | 나의 기부내역(기부코드 D-XXXX 조회, 내 기부금의 비례 배분) |
-| `/api/live`, `/api/my`, `/api/campaigns/[id]`, `/api/reports/draft` | 티커·본인조회·오픈API·보고서 초안 |
+| `/` (챗봇) | **기부 도우미** — 기부코드·모집건·기관을 질문에서 찾아 원장을 조회하고 AI가 그 데이터로만 답변 |
+| `/organizations`, `/organizations/[id]` | **주관기관 AI 감사** — 5년 결산 공시·외부감사·처분 이력·현재 판정을 AI가 해석해 신뢰 등급·근거·권고 제시 |
+| `/reports`, `/reports/[id]` | **AI 결산 보고서** — 기부 완료 건을 AI가 자동 작성, 금액·비율 원장 대조 검증 통과 시 완료 7일 후 자동 게시 |
+| `/my` | 나의 기부내역(기부코드 D-XXXX 조회, 내 기부금의 비례 배분, `?code=`로 바로 조회) |
+| `/api/live`, `/api/my`, `/api/campaigns/[id]`, `/api/chat`, `/api/organizations/[id]/audit` | 티커·본인조회·오픈API·챗봇·기관 감사 |
 
 ## 구조
 
@@ -35,8 +37,13 @@ src/lib/repository.ts    저장소 인터페이스 + MockRepository. 페이지�
 src/lib/pseudonymize.ts  가명처리(김*성, ㈜한*전자) + 기부코드(D-XXXX) 생성
 src/lib/rules.ts         판정 규칙(법정 모금비용 한도, 운영비 10%, 사업비 65%, 잔액, 공개주기)
 src/lib/rules-content.ts 운영 세칙 게시판 본문
-src/lib/report.ts        보고서 초안(개조식) 생성
-src/lib/ai.ts            OpenAI 호환 LLM 연결(선택) — 문장 다듬기만, 수치 변경 불가
+src/lib/report.ts        결산 보고서 '사실 블록'(원장 수치) + 검증용 허용 금액 집합
+src/lib/org-data.ts      주관기관 5년 이력(가상) — 결산·감사의견·처분
+src/lib/ai/config.ts     AI 제공자 선택(.env.local) — 키 없으면 데모 모드
+src/lib/ai/client.ts     OpenAI·Gemini·Claude 공통 호출(fetch, SDK 없음)
+src/lib/ai/org-audit.ts  기능1 주관기관 감사(지표 계산 → AI 감사의견 JSON → 형식 검증)
+src/lib/ai/assistant.ts  기능2 챗봇(질문에서 조회 대상 추출 → 원장 조회 → AI 답변)
+src/lib/ai/report-writer.ts 기능3 결산 보고서 자동 생성·검증·게시
 src/components/          BalanceSheetChart(대차대조표), BalanceExplorer(클릭→카드), LiveDonationTicker, Sidebar ...
 ```
 
@@ -55,9 +62,14 @@ src/components/          BalanceSheetChart(대차대조표), BalanceExplorer(클
 - 공익법인회계기준(기획재정부 고시) 운영성과표의 비용 3분류: 사업수행비용 / 일반관리비용 / 모금비용
 - BBB Wise Giving Alliance Standards for Charity Accountability: 총지출의 65% 이상 프로그램, 모금비용 35% 이하, 적립금 3배 한도
 
-## LLM 연결(선택)
+## AI 연결
 
-`.env.example`을 `.env.local`로 복사하고 `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`를 설정하면 보고서 작성 화면의 "LLM 다듬기"가 동작합니다. Ollama(Gemma·EXAONE)·HyperCLOVA X·OpenAI 등 OpenAI 호환 API면 교체 가능합니다.
+`.env.local`(깃 제외, 양식은 `.env.example`)에 키를 넣고 개발 서버를 다시 시작하면 세 기능이 실제 모델로 동작합니다.
+
+- `OPENAI_API_KEY` / `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` 중 하나 이상, 필요하면 `*_MODEL`
+- `AI_PROVIDER`로 제공자 고정(비우면 키가 있는 첫 제공자). `OPENAI_BASE_URL`로 Ollama 등 OpenAI 호환 서버 연결 가능
+- 키가 없으면 **데모 모드**: 같은 원장 지표로 규칙 기반 응답을 만들어 흐름을 시연하고, 화면에 "데모 모드(AI 미연결)"로 표시
+- 신뢰 장치: AI에는 원장에서 조회한 데이터만 전달 · 감사의견은 JSON 형식 검증 · 결산 보고서는 본문 금액·비율을 원장과 대조해 불일치 시 게시하지 않음
 
 ## 모의데이터 안내
 

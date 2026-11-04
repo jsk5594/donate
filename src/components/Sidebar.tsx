@@ -41,14 +41,58 @@ export function Sidebar({ groups }: { groups: SidebarGroup[] }) {
   // 그룹·항목 접힘 상태 (키: "phase" 또는 "phase/categoryId") — 기본은 모두 펼침
   const [closed, setClosed] = useState<Record<string, boolean>>({});
   const [mobileOpen, setMobileOpen] = useState(false);
+  // 데스크톱: 사이드바를 왼쪽으로 집어넣기(얇은 막대만 남김)
+  const [collapsed, setCollapsed] = useState(false);
   const toggle = (key: string) => setClosed((o) => ({ ...o, [key]: !o[key] }));
 
+  // 접기/펼치기: 바깥 폭이 줄어드는 동안 안쪽 패널은 왼쪽으로 미끄러지며 흐려지고, 얇은 막대가 뒤따라 나타남
+  const ease = "duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none";
   return (
-    <aside className="w-full shrink-0 border-b border-line bg-card lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:w-72 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+    <aside
+      className={`relative w-full shrink-0 border-b border-line bg-card transition-[width] lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:border-b-0 lg:border-r ${ease} ${collapsed ? "lg:w-11" : "lg:w-72"}`}
+    >
+      <div
+        className={`hidden transition-opacity lg:absolute lg:inset-0 lg:flex lg:flex-col lg:items-center lg:pt-4 ${ease} ${collapsed ? "lg:opacity-100 lg:delay-150" : "lg:pointer-events-none lg:opacity-0"}`}
+        aria-hidden={!collapsed}
+      >
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          tabIndex={collapsed ? 0 : -1}
+          aria-label="기부 현황 펼치기"
+          aria-expanded={false}
+          title="기부 현황 펼치기"
+          className="flex flex-col items-center gap-2 rounded-md px-1.5 py-2 text-muted hover:bg-[#F3F5F8] hover:text-primary"
+        >
+          <SideArrow dir="right" />
+          <span className="text-center text-xs font-semibold leading-tight">
+            기부
+            <br />
+            현황
+          </span>
+        </button>
+      </div>
+      <div
+        inert={collapsed}
+        className={`lg:h-full lg:w-72 lg:overflow-y-auto transition-[transform,opacity] ${ease} ${collapsed ? "lg:-translate-x-full lg:opacity-0" : "lg:translate-x-0 lg:opacity-100"}`}
+      >
       <div className="flex items-center justify-between px-4 pb-2 pt-4 lg:pt-5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted">기부 항목별 현황</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted">기부 현황</span>
+        <Link href="/status" className="ml-auto mr-1 rounded-md px-2 py-1 text-xs font-semibold text-primary hover:bg-primary-soft">
+          자세히 →
+        </Link>
         <button type="button" onClick={() => setMobileOpen((v) => !v)} aria-expanded={mobileOpen} className="rounded-md border border-line px-2.5 py-1 text-xs lg:hidden">
           {mobileOpen ? "접기" : "항목 펼치기"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setCollapsed(true)}
+          aria-label="기부 현황 집어넣기"
+          aria-expanded={true}
+          title="왼쪽으로 집어넣기"
+          className="hidden h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-[#F3F5F8] hover:text-primary lg:flex"
+        >
+          <SideArrow dir="left" />
         </button>
       </div>
       <nav className={`px-2 pb-6 ${mobileOpen ? "" : "hidden lg:block"}`}>
@@ -126,7 +170,17 @@ export function Sidebar({ groups }: { groups: SidebarGroup[] }) {
       <div className={`mx-4 mb-6 rounded-lg bg-[#F3F5F8] p-3 text-xs leading-relaxed text-muted ${mobileOpen ? "" : "hidden lg:block"}`}>
         배지는 운영 세칙 판정의 종합 등급입니다. <Link href="/rules/scoring" className="text-primary underline-offset-2 hover:underline">판정 기준표 보기</Link>
       </div>
+      </div>
     </aside>
+  );
+}
+
+function SideArrow({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className={dir === "right" ? "rotate-180" : ""}>
+      <path d="M10 3.5L5.5 8l4.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2.5 2.5v11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
   );
 }
 

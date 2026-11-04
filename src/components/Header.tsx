@@ -2,7 +2,9 @@ import Link from "next/link";
 
 const NAV = [
   { href: "/", label: "홈" },
+  { href: "/status", label: "기부 현황" },
   { href: "/monitor", label: "감시 현황" },
+  { href: "/organizations", label: "주관기관 감사" },
   { href: "/rules", label: "운영 세칙" },
   { href: "/reports", label: "기부 보고서" },
   { href: "/my", label: "나의 기부내역" },
