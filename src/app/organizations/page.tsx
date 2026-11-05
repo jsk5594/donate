@@ -48,7 +48,7 @@ export default async function OrganizationsPage() {
           );
         })}
       </div>
-      <p className="text-xs text-muted">등급 배지는 지표 점수 기준 참고값이며, 기관 페이지에서 AI가 이력을 해석한 감사의견을 확인할 수 있습니다. 기관명·수치는 모두 가상입니다.</p>
+      <p className="text-xs text-muted">등급은 지표 점수(80점 이상 신뢰 가능 · 60~79점 주의 필요 · 60점 미만 신중 검토)로 정하며, 기관 페이지에서 AI가 이력을 해석한 감사의견을 확인할 수 있습니다. 사업비는 수입 대비 비율입니다. 기관명·수치는 모두 가상입니다.</p>
     </div>
   );
 }

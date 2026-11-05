@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ScoreBadge, StatusBadge } from "./HealthBadge";
 import { fmtDate, pct, wonShort } from "@/lib/format";
+import { goalRate } from "@/lib/rules";
 import type { CampaignSummary } from "@/lib/types";
 
 export function CampaignCard({ s }: { s: CampaignSummary }) {
@@ -24,7 +25,7 @@ export function CampaignCard({ s }: { s: CampaignSummary }) {
       </div>
       <div className="flex items-baseline justify-between">
         <span className="text-lg font-bold tnum">{wonShort(s.sheet.inflow.total)}</span>
-        <span className="text-xs text-muted">목표 {wonShort(s.campaign.goal)} · {pct(s.sheet.inflow.total / s.campaign.goal, 0)}</span>
+        <span className="text-xs text-muted">목표 {wonShort(s.campaign.goal)} · {pct(goalRate(s.sheet, s.campaign.goal), 0)}</span>
       </div>
       <div className="flex h-2.5 overflow-hidden rounded-full bg-[#E9EDF3]" aria-hidden="true">
         {bars.map((b) => (

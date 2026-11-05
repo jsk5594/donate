@@ -84,7 +84,7 @@ function Column({ side, title, caption, segs, sheet, total, height, selected, co
                 boxShadow: pending ? undefined : isSel ? "inset 0 0 0 3px #15202B" : "inset 0 -1px 0 rgba(255,255,255,.5)",
               }}
             >
-              {h >= 34 && (
+              {h >= 24 && (
                 <span className={`absolute inset-x-3 top-1/2 -translate-y-1/2 truncate ${compact ? "text-xs" : "text-[13px]"} font-semibold ${s.key === "other" || s.key === "group" || s.key === "balance" ? "text-foreground" : "text-white"}`}>
                   {s.label} <span className="font-normal opacity-90">{wonShort(s.amount)} · {pct(s.amount / colTotal, 0)}</span>
                 </span>

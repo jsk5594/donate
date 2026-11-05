@@ -1,5 +1,6 @@
 import { fmtDate, won, pct } from "./format";
 import type { CampaignDetail } from "./repository";
+import { goalRate } from "./rules";
 
 /**
  * 결산 보고서의 "사실 블록" — 원장에서 계산한 수치만 담습니다.
@@ -41,7 +42,7 @@ export function buildSettlementFacts(detail: CampaignDetail): SettlementFacts {
     ` ○ 모집목적: ${campaign.purpose}`,
     ` ○ 모집기간: ${fmtDate(campaign.startDate)} ~ ${fmtDate(campaign.endDate)} / 집행 완료: ${fmtDate(end)} (총 ${durationDays}일)`,
     `□ 모집 결과`,
-    ` ○ 기부금 ${detail.donationCount}건 ${won(donated)} (목표 ${won(campaign.goal)} 대비 ${pct(donated / campaign.goal)})`,
+    ` ○ 기부금 ${detail.donationCount}건 ${won(donated)} (목표 ${won(campaign.goal)} 대비 ${pct(goalRate(sheet, campaign.goal))})`,
     `   - 개인 ${won(sheet.inflow.individual)} (${pct(sheet.inflow.individual / received)}) / 기업 ${won(sheet.inflow.corporate)} (${pct(sheet.inflow.corporate / received)}) / 단체 ${won(sheet.inflow.group)} (${pct(sheet.inflow.group / received)})`,
     ` ○ 이자 등 기타수입 ${won(sheet.inflow.other)} / 총수입 ${won(sheet.inflow.total)}`,
     `□ 집행 결과`,

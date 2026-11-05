@@ -6,7 +6,7 @@
  * ※ 공개 이력은 데이터에 마지막 공개일만 있어, 그 이전 시점은 '주기대로 공개했다'고 가정
  */
 import { computeBalanceSheet, otherInflowFor, type Overview } from "./repository";
-import { evaluateHealth } from "./rules";
+import { aggregateIndex, evaluateHealth } from "./rules";
 import type { Campaign } from "./types";
 
 export interface TrendPoint {
@@ -62,17 +62,13 @@ export function buildIndexTrend(o: Overview, now = new Date()): IndexTrend {
     }
     return out;
   };
-  const avg = (xs: { score: number; weight: number }[]) => {
-    const w = xs.reduce((a, x) => a + x.weight, 0);
-    return xs.length && w ? Math.floor(xs.reduce((a, x) => a + x.score * x.weight, 0) / w) : null;
-  };
   const point = (key: string, label: string, periodStart: Date, asOf: Date): TrendPoint => {
     const snap = snapshot(periodStart, asOf);
     return {
       key,
       label,
-      overall: avg(snap),
-      byCategory: Object.fromEntries(categories.map((c) => [c.id, avg(snap.filter((x) => x.categoryId === c.id))])),
+      overall: aggregateIndex(snap),
+      byCategory: Object.fromEntries(categories.map((c) => [c.id, aggregateIndex(snap.filter((x) => x.categoryId === c.id))])),
     };
   };
 

@@ -5,7 +5,7 @@ import { HealthChecks } from "@/components/HealthChecks";
 import { ScoreBadge, StatusBadge } from "@/components/HealthBadge";
 import { fmtDate, pct, won } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
-import { legalFundraisingCap } from "@/lib/rules";
+import { goalRate, legalFundraisingCap } from "@/lib/rules";
 import { organizationByName } from "@/lib/org-data";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +61,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
       </header>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <Kpi label="기부받은 돈" value={won(sheet.inflow.total)} sub={`목표 대비 ${pct((sheet.inflow.total - sheet.inflow.other) / campaign.goal, 0)} · ${detail.donationCount}건`} />
+        <Kpi label="기부받은 돈" value={won(sheet.inflow.total)} sub={`목표 대비 ${pct(goalRate(sheet, campaign.goal), 0)} · ${detail.donationCount}건`} />
         <Kpi label="기부됨 (사업수행비용)" value={won(sheet.outflow.program)} sub={`${pct(sheet.outflow.program / t)} · 1만원당 ${per10k.toLocaleString("ko-KR")}원`} accent="var(--out-program)" />
         <Kpi label="운영비 (일반관리비용)" value={won(sheet.outflow.admin)} sub={`${pct(sheet.outflow.admin / t)} · 세칙 한도 10%`} accent="var(--out-admin)" />
         <Kpi label="모금비용" value={won(sheet.outflow.fundraising)} sub={`${pct(sheet.outflow.fundraising / t)} · 법정 한도 ${pct(cap, 0)}`} accent="var(--out-fundraising)" />

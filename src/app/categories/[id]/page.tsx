@@ -4,7 +4,7 @@ import { BalanceExplorer } from "@/components/BalanceExplorer";
 import { CampaignCard } from "@/components/CampaignCard";
 import { won } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
-import { PHASES, phaseOf } from "@/lib/types";
+import { STAGES, stageOf } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +29,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ id: s
         </p>
       </header>
 
-      {PHASES.map((phase) => {
-        const list = cat.campaigns.filter((s) => phaseOf(s.campaign.status) === phase);
+      {STAGES.map((phase) => {
+        const list = cat.campaigns.filter((s) => stageOf(s.campaign.status) === phase);
         if (list.length === 0) return null;
         return (
           <section key={phase}>

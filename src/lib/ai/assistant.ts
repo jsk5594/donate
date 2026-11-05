@@ -8,8 +8,8 @@
 import { fmtDate, pct, won, wonShort } from "../format";
 import { ORGANIZATIONS } from "../org-data";
 import { getRepository, type MyDonationsResult, type Overview } from "../repository";
-import { POLICY } from "../rules";
-import type { CampaignSummary } from "../types";
+import { needsAttention, POLICY } from "../rules";
+import { stageOf, type CampaignSummary } from "../types";
 import { generate, type ChatTurn } from "./client";
 import { DEMO_ENGINE, type EngineInfo } from "./config";
 import { computeOrgMetrics, gradeOf } from "./org-audit";
@@ -25,7 +25,7 @@ export interface ChatReply {
   engine: EngineInfo;
 }
 
-const CODE_RE = /D-?[0-9A-F]{4}\b/i;
+const CODE_RE = /D-?[0-9A-F]{8}\b/i;
 
 /** 모집건 제목의 첫 단어(지명·대상)로 언급 여부 판단 */
 function mentionedCampaigns(text: string, all: CampaignSummary[]): CampaignSummary[] {
@@ -74,7 +74,7 @@ function contextForPrompt(c: Context) {
       모집건수: c.overview.totals.campaignCount,
       기부받은돈: won(c.overview.totals.received),
       사업에쓰인돈: won(c.overview.totals.donated),
-      확인필요모집건: c.overview.campaigns.filter((s) => s.health.overall !== "양호").map((s) => `${s.campaign.title}(${s.health.overall}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")})`),
+      확인필요모집건: c.overview.campaigns.filter(needsAttention).map((s) => `${s.campaign.title}(${s.health.overall}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")})`),
     },
     운영세칙: { 운영비한도: "10%", 사업비최소: "65%(권장 75%)", 모금비용: "법정 한도(10억 이하 15%)", 모집종료후잔액: "30% 이하 권장", 공개주기: "14일" },
     ...(c.donorCode
@@ -91,7 +91,7 @@ function contextForPrompt(c: Context) {
       : {}),
     언급된모집건: c.campaigns.map((s) => ({
       제목: s.campaign.title,
-      상태: s.campaign.status,
+      상태: stageOf(s.campaign.status),
       주관기관: s.campaign.organizer,
       기부받은돈: won(s.sheet.inflow.total),
       사업비: `${won(s.sheet.outflow.program)} (${pct(s.sheet.outflow.program / (s.sheet.inflow.total || 1))})`,
@@ -108,7 +108,7 @@ function contextForPrompt(c: Context) {
 const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부CCTV'의 기부 도우미입니다.
 - 오직 [조회 데이터]에 있는 내용으로만 답합니다. 없는 정보는 "확인되지 않습니다"라고 말하고 어디서 볼 수 있는지 안내하세요.
 - 수치는 데이터 값을 그대로 인용하세요. 새로 계산하지 마세요.
-- 기부내역 질문인데 기부코드가 없으면, 기부코드(D-XXXX, 기부 완료 문자에 포함)를 알려달라고 요청하세요.
+- 기부내역 질문인데 기부코드가 없으면, 기부코드(D-XXXXXXXX, 기부 완료 문자에 포함)를 알려달라고 요청하세요.
 - 실명·연락처를 묻거나 추측하지 마세요. 이름은 가명(김*성) 그대로만 씁니다.
 - 기관을 믿어도 되는지 묻는 질문엔 지표 근거로 답하되, 최종 판단은 기부자 몫임을 존중하고 '주관기관 감사' 페이지를 안내하세요.
 - 존댓말, 3~6문장, 필요하면 짧은 목록.`;
@@ -130,7 +130,7 @@ export async function answer(messages: ChatTurn[]): Promise<ChatReply> {
 
 function linksFor(c: Context): ChatLink[] {
   const out: ChatLink[] = [];
-  if (c.myDonations) out.push({ label: `${c.myDonations.donorCode} 기부내역 자세히`, href: `/my?code=${c.myDonations.donorCode}` });
+  if (c.myDonations) out.push({ label: `${c.myDonations.donorCode} 기부내역 자세히`, href: `/donations?code=${c.myDonations.donorCode}` });
   for (const s of c.campaigns.slice(0, 3)) out.push({ label: s.campaign.title, href: `/campaigns/${s.campaign.id}` });
   for (const o of c.orgs.slice(0, 2)) out.push({ label: `${o.name} 감사 보기`, href: `/organizations/${o.id}` });
   return out;
@@ -152,7 +152,7 @@ function demoAnswer(q: string, c: Context): string {
   }
 
   if (asksMine) {
-    if (!c.donorCode) return "기부내역을 확인하려면 기부코드가 필요합니다. 기부 완료 문자에 있는 'D-XXXX' 형식의 코드를 입력해 주세요.";
+    if (!c.donorCode) return "기부내역을 확인하려면 기부코드가 필요합니다. 기부 완료 문자에 있는 'D-XXXXXXXX' 형식의 코드를 입력해 주세요.";
     if (!c.myDonations) return `기부코드 ${c.donorCode}로 조회된 내역이 없습니다. 코드를 다시 확인해 주세요.`;
     const r = c.myDonations;
     const sum = r.items.reduce((a, i) => ({ p: a.p + i.allocation.program, ad: a.ad + i.allocation.admin, f: a.f + i.allocation.fundraising, b: a.b + i.allocation.balance }), { p: 0, ad: 0, f: 0, b: 0 });
@@ -171,7 +171,7 @@ function demoAnswer(q: string, c: Context): string {
     if (s.campaign.status === "예정")
       return `${s.campaign.title}은 진행 예정 모집건입니다. ${fmtDate(s.campaign.startDate)}에 모집을 시작하며(목표 ${won(s.campaign.goal)}), 운영 세칙 판정은 모집 시작 후부터 합니다.`;
     return [
-      `${s.campaign.title}(${s.campaign.status})은 지금까지 ${won(s.sheet.inflow.total)}을 모금했습니다.`,
+      `${s.campaign.title}(${stageOf(s.campaign.status)})은 지금까지 ${won(s.sheet.inflow.total)}을 모금했습니다.`,
       `- 사업비 ${pct(s.sheet.outflow.program / t)} · 운영비 ${pct(s.sheet.outflow.admin / t)} · 모금비용 ${pct(s.sheet.outflow.fundraising / t)}`,
       `- 아직 쓰이지 않은 돈 ${won(s.sheet.outflow.balance)}`,
       `- 기부투명도지수 ${s.health.score}점(${s.health.overall})`,
@@ -180,9 +180,9 @@ function demoAnswer(q: string, c: Context): string {
   }
 
   if (/문제|위반|주의|이상|확인\s*필요|위험/.test(q)) {
-    const list = c.overview.campaigns.filter((s) => s.health.overall !== "양호");
-    if (!list.length) return "현재 운영 세칙 판정에서 '주의' 이상인 모집건은 없습니다.";
-    return [`운영 세칙 판정에서 확인이 필요한 모집건은 ${list.length}건입니다.`, ...list.map((s) => `- [${s.health.score}점 ${s.health.overall}] ${s.campaign.title}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")}`)].join("\n");
+    const list = c.overview.campaigns.filter(needsAttention);
+    if (!list.length) return "집행이 끝나지 않은 모집건 중 '주의' 이상인 건은 없습니다.";
+    return [`집행이 끝나지 않은 모집건 중 확인이 필요한 건은 ${list.length}건입니다.`, ...list.map((s) => `- [${s.health.score}점 ${s.health.overall}] ${s.campaign.title}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")}`)].join("\n");
   }
 
   if (/운영비|모금비|기준|세칙|몇\s*%|한도/.test(q)) {
@@ -198,7 +198,7 @@ function demoAnswer(q: string, c: Context): string {
   return [
     `현재 ${c.overview.totals.campaignCount}개 모집건에 ${wonShort(c.overview.totals.received)}이 모였고, ${wonShort(c.overview.totals.donated)}이 사업에 쓰였습니다.`,
     "이런 질문을 할 수 있어요.",
-    "- 내 기부내역 확인 (기부코드 D-XXXX 입력)",
+    "- 내 기부내역 확인 (기부코드 D-XXXXXXXX 입력)",
     "- 지금 문제 있는 모집건은?",
     "- ○○재단 믿을 만해?",
     "- 거제도 홍수 모금 어떻게 쓰였어?",

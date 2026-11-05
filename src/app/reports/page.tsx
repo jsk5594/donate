@@ -1,18 +1,35 @@
+import Form from "next/form";
 import Link from "next/link";
 import { ScoreBadge, StatusBadge } from "@/components/HealthBadge";
 import { publishDateOf, PUBLISH_DELAY_DAYS } from "@/lib/ai/report-writer";
 import { fmtDate, won } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
-import { phaseOf } from "@/lib/types";
+import type { CampaignSummary } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReportsPage() {
+/** 검색 대상: 모집건명·주관기관·기부 항목·지역·모집 목적·연도 */
+function searchTextOf(s: CampaignSummary) {
+  const c = s.campaign;
+  const years = [c.startDate, c.completedAt].filter(Boolean).map((d) => `${d!.slice(0, 4)}년`);
+  return [c.title, c.organizer, s.category.name, c.region, c.purpose, ...years].join(" ").toLowerCase();
+}
+
+export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
+  const { q: rawQ } = await searchParams;
+  const q = (Array.isArray(rawQ) ? rawQ[0] : (rawQ ?? "")).trim();
+  // 띄어쓰기로 나눈 단어를 모두 포함하는 건만
+  const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = (s: CampaignSummary) => {
+    const text = searchTextOf(s);
+    return terms.every((t) => text.includes(t));
+  };
+
   const overview = await getRepository().getOverview();
   const published = overview.campaigns
-    .filter((s) => s.campaign.status === "완료" && s.campaign.completedAt)
+    .filter((s) => s.campaign.status === "완료" && s.campaign.completedAt && matches(s))
     .sort((a, b) => b.campaign.completedAt!.localeCompare(a.campaign.completedAt!));
-  const pending = overview.campaigns.filter((s) => phaseOf(s.campaign.status) === "진행중");
+  const pending = overview.campaigns.filter((s) => s.campaign.status !== "예정" && s.campaign.status !== "완료" && matches(s));
 
   return (
     <div className="flex flex-col gap-6">
@@ -23,8 +40,31 @@ export default async function ReportsPage() {
         </p>
       </header>
 
+      {/* key: '지우기'로 주소가 바뀌면 입력창도 비움 */}
+      <Form action="/reports" key={q} role="search" className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-card p-4">
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          aria-label="보고서 키워드 검색"
+          placeholder="모집건명, 주관기관, 항목, 지역, 연도로 검색"
+          className="min-w-0 flex-1 basis-60 rounded-lg border border-line bg-card px-3.5 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+        <button type="submit" className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90">
+          검색
+        </button>
+        {q && (
+          <Link href="/reports" className="rounded-lg border border-line px-4 py-2 text-sm hover:bg-[#F3F5F8]">
+            지우기
+          </Link>
+        )}
+      </Form>
+
       <section className="overflow-hidden rounded-xl border border-line bg-card">
-        <div className="border-b border-line bg-[#F7F8FA] px-5 py-2.5 text-xs font-semibold text-muted">AI 자동 게시 결산 보고서 · {published.length}건</div>
+        <div className="border-b border-line bg-[#F7F8FA] px-5 py-2.5 text-xs font-semibold text-muted">
+          AI 자동 게시 결산 보고서 · {q ? `'${q}' 검색 결과 ` : ""}{published.length}건
+        </div>
+        {published.length === 0 && <p className="px-5 py-8 text-center text-sm text-muted">{q ? "검색어에 맞는 보고서가 없습니다. 다른 키워드로 찾아 보세요." : "아직 게시된 보고서가 없습니다."}</p>}
         <ul className="divide-y divide-line">
           {published.map((s) => (
             <li key={s.campaign.id}>
@@ -46,10 +86,10 @@ export default async function ReportsPage() {
         </ul>
       </section>
 
-      <section className="rounded-xl border border-line bg-card">
+      {pending.length > 0 && <section className="rounded-xl border border-line bg-card">
         <div className="border-b border-line px-5 py-3">
           <h2 className="text-sm font-bold">자동 생성 대기 · {pending.length}건</h2>
-          <p className="mt-0.5 text-xs text-muted">진행 중인 모집건은 집행이 완료되는 시점에 결산 보고서가 자동 생성됩니다.</p>
+          <p className="mt-0.5 text-xs text-muted">집행이 끝나지 않은 모집건은 집행이 완료되는 시점에 결산 보고서가 자동 생성됩니다.</p>
         </div>
         <ul className="divide-y divide-line">
           {pending.map((s) => (
@@ -62,7 +102,7 @@ export default async function ReportsPage() {
             </li>
           ))}
         </ul>
-      </section>
+      </section>}
     </div>
   );
 }

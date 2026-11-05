@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CampaignCard } from "@/components/CampaignCard";
 import { ScoreBadge } from "@/components/HealthBadge";
+import { RiskView } from "@/components/RiskView";
 import { fmtDate, pct, won, wonShort } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
 import { STAGES, stageOf, type CampaignSummary, type Stage } from "@/lib/types";
@@ -22,7 +23,7 @@ const STAGE_STYLE: Record<Stage, string> = {
   종료: "bg-[#E9EDF3] text-muted",
 };
 
-type Params = { y?: string | string[]; c?: string | string[]; s?: string | string[]; v?: string };
+type Params = { y?: string | string[]; c?: string | string[]; s?: string | string[]; v?: string; tab?: string; sort?: string; dir?: string };
 const asList = (v: string | string[] | undefined) => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
 const yearOf = (iso: string) => new Date(iso).getFullYear();
 
@@ -35,9 +36,18 @@ interface Row {
   fundraising: number;
 }
 
-/** 기부 현황 조회 — 연도·항목·진행상황을 체크해 조회 */
+/** 기부 현황 — '기부 현황 조회'(연도·항목·진행상황 체크) / '기부 위기 감지'(위반·주의 모집건) 탭 */
 export default async function StatusPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
+  if (params.tab === "risk") {
+    return (
+      <div className="flex flex-col gap-6">
+        <StatusHeader tab="risk" />
+        <RiskView params={params} />
+      </div>
+    );
+  }
+
   const overview = await getRepository().getOverview();
   const { campaigns, donations, expenses, categories } = overview;
 
@@ -72,8 +82,8 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
     return true;
   });
 
-  // 금액: 연도를 고르면 그 연도에 들어오고 나간 돈만 합산
-  const rowMap = new Map<string, Row>(matched.map((s) => [s.campaign.id, { s, received: 0, count: 0, program: 0, admin: 0, fundraising: 0 }]));
+  // 금액: 연도를 고르면 그 연도에 들어오고 나간 돈만 합산. 전체 기간이면 다른 화면과 같게 이자 등 기타수입까지 포함
+  const rowMap = new Map<string, Row>(matched.map((s) => [s.campaign.id, { s, received: yearFilter ? 0 : s.sheet.inflow.other, count: 0, program: 0, admin: 0, fundraising: 0 }]));
   for (const d of donations) {
     const r = rowMap.get(d.campaignId);
     if (!r || !inYears(d.donatedAt)) continue;
@@ -119,10 +129,8 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">기부 현황 조회</h1>
-        <p className="mt-1 text-sm text-muted">연도·항목·진행상황을 체크하고 조회하세요. 아무것도 체크하지 않은 묶음은 전체로 봅니다.</p>
-      </header>
+      <StatusHeader tab="search" />
+      <p className="text-sm text-muted">연도·항목·진행상황을 체크하고 조회하세요. 아무것도 체크하지 않은 묶음은 전체로 봅니다.</p>
 
       {/* 조회 조건 */}
       {/* next/form: 새로고침 없이 클라이언트 이동 → 사이드바 접힘 상태 유지. key로 '초기화' 시 체크 상태 갱신 */}
@@ -210,7 +218,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
                 <dd className="text-right font-semibold tnum">{won(tot.received)}</dd>
                 <dt className="text-muted">쓰인 돈</dt>
                 <dd className="text-right font-semibold tnum">{won(spent)}</dd>
-                <dt className="text-muted">사업비 비율</dt>
+                <dt className="text-muted">사업비 비중(총지출 대비)</dt>
                 <dd className="text-right tnum">{spent ? pct(tot.program / spent) : "—"}</dd>
                 <dt className="text-muted">미집행 잔액(현재)</dt>
                 <dd className="text-right tnum">{won(balance)}</dd>
@@ -256,7 +264,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
                     <th className="px-3 py-2 text-left font-semibold">모집 기간</th>
                     <th className="px-3 py-2 text-right font-semibold">기부받은 돈</th>
                     <th className="px-3 py-2 text-right font-semibold">쓰인 돈</th>
-                    <th className="px-3 py-2 text-right font-semibold">사업비 비율</th>
+                    <th className="px-3 py-2 text-right font-semibold">사업비 비중<span className="block font-normal">(총지출 대비)</span></th>
                     <th className="px-5 py-2 text-left font-semibold">투명도지수</th>
                   </tr>
                 </thead>
@@ -295,6 +303,31 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
         )}
       </section>
     </div>
+  );
+}
+
+function StatusHeader({ tab }: { tab: "search" | "risk" }) {
+  const tabs = [
+    { key: "search", href: "/status", label: "기부 현황 조회", on: "bg-primary text-white", off: "text-muted hover:bg-primary-soft hover:text-primary" },
+    { key: "risk", href: "/status?tab=risk", label: "기부 위기 감지", on: "bg-risk-orange text-risk-ink", off: "text-muted hover:bg-risk-hover hover:text-risk-ink" },
+  ] as const;
+  return (
+    <header className="flex">
+      <h1 className="sr-only">기부 현황</h1>
+      <nav className="flex flex-wrap gap-1 rounded-xl border border-line bg-card p-1" aria-label="기부 현황 보기">
+        {tabs.map((t) => (
+          <Link
+            key={t.key}
+            href={t.href}
+            scroll={false}
+            aria-current={tab === t.key ? "page" : undefined}
+            className={`rounded-lg px-5 py-1.5 text-2xl font-bold tracking-tight ${tab === t.key ? t.on : t.off}`}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </nav>
+    </header>
   );
 }
 

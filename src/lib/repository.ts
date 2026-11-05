@@ -6,6 +6,7 @@
  */
 
 import { loadDataset } from "./db";
+import { buildDonorBoard, buildDonorCommunity, buildMessageWall, buildStanding, type BoardFilter, type DonorBoard, type DonorCommunity, type DonorStanding, type MessageWall } from "./donor-board";
 import { interestIncomeFor } from "./mock-data";
 import { donorCodeOf, toPublicDonation, toPublicExpense } from "./pseudonymize";
 import { evaluateHealth } from "./rules";
@@ -30,6 +31,7 @@ export interface MyDonationsResult {
   donorAlias: string;
   items: (PublicDonation & { campaignTitle: string; allocation: { program: number; admin: number; fundraising: number; balance: number } })[];
   total: number;
+  standing: DonorStanding;
 }
 
 export interface Repository {
@@ -41,6 +43,9 @@ export interface Repository {
   /** now 생략 시 호출 시각 기준 */
   getLiveDonations(now?: number, count?: number): Promise<(PublicDonation & { campaignTitle: string })[]>;
   findMyDonations(donorCode: string): Promise<MyDonationsResult | null>;
+  getDonorBoard(filter: BoardFilter): Promise<DonorBoard>;
+  getDonorCommunity(): Promise<DonorCommunity>;
+  getMessageWall(categoryId: string | null): Promise<MessageWall>;
 }
 
 // ---------- 공통 집계 ----------
@@ -192,7 +197,20 @@ class MockRepository implements Repository {
       donorAlias: items[0].donorAlias,
       items: items.sort((a, b) => b.donatedAt.localeCompare(a.donatedAt)),
       total: items.reduce((s, i) => s + i.amount, 0),
+      standing: buildStanding(this.ds, mine),
     };
+  }
+
+  async getDonorBoard(filter: BoardFilter) {
+    return buildDonorBoard(this.ds, filter);
+  }
+
+  async getDonorCommunity() {
+    return buildDonorCommunity(this.ds);
+  }
+
+  async getMessageWall(categoryId: string | null) {
+    return buildMessageWall(this.ds, categoryId);
   }
 }
 
@@ -214,7 +232,7 @@ export function getRepository(): Repository {
   return repo;
 }
 
-/** 데모용: '나의 기부내역' 테스트 코드 몇 개를 노출 */
+/** 데모용: '기부내역' 페이지 테스트 코드 몇 개를 노출 */
 export function sampleDonorCodes(): { code: string; alias: string; count: number }[] {
   const ds = loadDataset();
   const map = new Map<string, { alias: string; count: number; type: string }>();

@@ -10,7 +10,7 @@
  * - 해외: BBB Wise Giving Alliance — 총지출의 65% 이상 프로그램, 모금비용은 관련 기부금의 35% 이하
  */
 
-import type { BalanceSheet, Campaign, CampaignHealth, HealthCheck, HealthLevel } from "./types";
+import type { BalanceSheet, Campaign, CampaignHealth, CampaignSummary, HealthCheck, HealthLevel } from "./types";
 
 /** 법정 모집비용(모금비용) 한도 — 모집금액 구간별 */
 export function legalFundraisingCap(received: number): number {
@@ -40,6 +40,30 @@ export const SCORE_WEIGHTS = { integrity: 20, fundraising: 20, admin: 15, progra
 
 /** 지수 구간: 80점 이상 양호 · 60~79점 주의 · 60점 미만 위반 */
 export const SCORE_BANDS = { good: 80, warn: 60 } as const;
+
+export function levelOfScore(score: number): HealthLevel {
+  return score >= SCORE_BANDS.good ? "양호" : score >= SCORE_BANDS.warn ? "주의" : "위반";
+}
+
+/**
+ * 여러 모집건을 묶은 지수(종합·지역·연도 평균 공통) — 기부받은 돈으로 가중 평균, 소수점 버림.
+ * 묶음 전체의 가중치가 0이면 단순 평균, 대상이 없으면 null.
+ */
+export function aggregateIndex(items: { score: number; weight: number }[]): number | null {
+  if (items.length === 0) return null;
+  const weight = items.reduce((a, x) => a + x.weight, 0);
+  return Math.floor(weight > 0 ? items.reduce((a, x) => a + x.score * x.weight, 0) / weight : items.reduce((a, x) => a + x.score, 0) / items.length);
+}
+
+/** 목표 달성률 — 모집한 기부금만 목표와 비교(이자 등 기타수입 제외) */
+export function goalRate(sheet: BalanceSheet, goal: number): number {
+  return goal ? (sheet.inflow.total - sheet.inflow.other) / goal : 0;
+}
+
+/** 지금 확인이 필요한 모집건 — 돈이 아직 움직이는(집행이 끝나지 않은) 모집건 중 양호가 아닌 건 */
+export function needsAttention(s: CampaignSummary): boolean {
+  return s.campaign.status !== "예정" && s.campaign.status !== "완료" && s.health.overall !== "양호";
+}
 
 /**
  * 항목 점수(낮을수록 좋은 지표용). 비율 v에 따라 배점의
@@ -146,7 +170,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
     level: adminRatio > POLICY.adminRatioBad ? "위반" : adminRatio > POLICY.adminRatioWarn ? "주의" : "양호",
     value: `${(adminRatio * 100).toFixed(1)}%`,
     threshold: `≤ ${(POLICY.adminRatioBad * 100).toFixed(0)}% (주의 ${(POLICY.adminRatioWarn * 100).toFixed(0)}%)`,
-    basis: "세칙 제6조 (운영비 상한)",
+    basis: "세칙 제22조 (운영비 상한)",
     detail: "인건비·임차료·회계감사비 등 모집 목적 사업과 직접 관련 없는 관리비용입니다.",
     points: pts(SCORE_WEIGHTS.admin, adminRatio, 0.04, POLICY.adminRatioWarn, POLICY.adminRatioBad, 0.2),
     maxPoints: SCORE_WEIGHTS.admin,
@@ -160,7 +184,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
     level: spent === 0 ? "양호" : programShare < POLICY.programShareMin ? "위반" : programShare < POLICY.programShareGood ? "주의" : "양호",
     value: spent === 0 ? "집행 전" : `${(programShare * 100).toFixed(1)}%`,
     threshold: `≥ ${(POLICY.programShareMin * 100).toFixed(0)}% (권장 ${(POLICY.programShareGood * 100).toFixed(0)}%)`,
-    basis: "세칙 제7조 · BBB Wise Giving Alliance 기준 1",
+    basis: "세칙 제18조 · BBB Wise Giving Alliance 기준 1",
     detail: "쓰인 돈 중 실제 수혜자에게 전달된(기부된) 몫입니다.",
     // 높을수록 좋은 지표 → 부호를 뒤집어 같은 함수 사용
     points: spent === 0 ? SCORE_WEIGHTS.program : pts(SCORE_WEIGHTS.program, -programShare, -0.9, -POLICY.programShareGood, -POLICY.programShareMin, -0.35),
@@ -195,7 +219,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
       level: finalLag < 0 ? "위반" : ok ? "양호" : "주의",
       value: finalLag < 0 ? "미공개" : `집행 완료 후 ${finalLag}일`,
       threshold: `완료 후 ${campaign.disclosureCycleDays}일 이내`,
-      basis: "기부금품법 제14조 · 세칙 제9조",
+      basis: "기부금품법 제14조 · 세칙 제15조",
       detail: finalLag < 0 ? "집행 완료 후 최종 결산이 공개되지 않았습니다." : `집행 완료(${campaign.completedAt}) 후 최종 사용내역이 공개되었습니다.`,
       // 완료 후 늦은 공개는 최대 '주의'(60%까지), 미공개만 0점
       points: finalLag < 0 ? 0 : Math.max(SCORE_WEIGHTS.disclosure * 0.6, pts(SCORE_WEIGHTS.disclosure, finalLag, campaign.disclosureCycleDays, campaign.disclosureCycleDays + POLICY.disclosureGraceDays, campaign.disclosureCycleDays + POLICY.disclosureGraceDays + 30, campaign.disclosureCycleDays + POLICY.disclosureGraceDays + 60)),
@@ -211,7 +235,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
     level: overdue > POLICY.disclosureGraceDays + 14 ? "위반" : overdue > POLICY.disclosureGraceDays ? "주의" : "양호",
     value: `마지막 공개 ${daysSince}일 전`,
     threshold: `${campaign.disclosureCycleDays}일마다`,
-    basis: "기부금품법 제14조 · 세칙 제9조",
+    basis: "기부금품법 제14조 · 세칙 제15조",
     detail: overdue > POLICY.disclosureGraceDays ? `공개 기한을 ${overdue}일 초과했습니다.` : "정해진 주기 안에 사용내역이 공개되고 있습니다.",
     points: pts(SCORE_WEIGHTS.disclosure, overdue, 0, POLICY.disclosureGraceDays, POLICY.disclosureGraceDays + 14, POLICY.disclosureGraceDays + 74),
     maxPoints: SCORE_WEIGHTS.disclosure,

@@ -15,6 +15,8 @@ interface Props {
   campaignEnded?: boolean;
   initialSelected?: SegmentKey | null;
   height?: number;
+  /** 그래프 최대 가로(px) — 지정하면 가운데 정렬, 아래 상세 카드는 전체 폭 유지 */
+  chartMaxWidth?: number;
   /** donations를 일부만 넘길 때(메인 전체 화면) 유형별 전체 건수·최고액 */
   donorStats?: Partial<Record<PublicDonation["donorType"], { count: number; max: number }>>;
 }
@@ -22,7 +24,7 @@ interface Props {
 const DONOR_TYPE_OF: Partial<Record<SegmentKey, PublicDonation["donorType"]>> = { individual: "개인", corporate: "기업", group: "단체" };
 const EXPENSE_TYPE_OF: Partial<Record<SegmentKey, PublicExpense["type"]>> = { program: "사업수행비용", admin: "일반관리비용", fundraising: "모금비용" };
 
-export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, campaignEnded, initialSelected = null, height, donorStats }: Props) {
+export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, campaignEnded, initialSelected = null, height, chartMaxWidth, donorStats }: Props) {
   const [selected, setSelected] = useState<SegmentKey | null>(initialSelected);
   const [openStat, setOpenStat] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -36,13 +38,15 @@ export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, ca
 
   return (
     <div className="flex flex-col gap-6">
-      <BalanceSheetChart sheet={sheet} selected={selected} onSelect={select} height={height} />
+      <div className="mx-auto flex w-full flex-col gap-6" style={{ maxWidth: chartMaxWidth }}>
+        <BalanceSheetChart sheet={sheet} selected={selected} onSelect={select} height={height} />
 
-      {!seg && (
-        <div className="rounded-xl border border-dashed border-line bg-card px-5 py-4 text-sm text-muted">
-          그래프의 항목(막대 또는 범례)을 클릭하면 누가 얼마를 기부했는지, 어떤 통계목으로 얼마를 썼는지 카드로 펼쳐집니다.
-        </div>
-      )}
+        {!seg && (
+          <div className="rounded-xl border border-dashed border-line bg-card px-5 py-4 text-sm text-muted">
+            그래프의 항목(막대 또는 범례)을 클릭하면 누가 얼마를 기부했는지, 어떤 통계목으로 얼마를 썼는지 카드로 펼쳐집니다.
+          </div>
+        )}
+      </div>
 
       {seg && (
         <section className="rounded-xl border border-line bg-card" aria-live="polite">

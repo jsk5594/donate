@@ -25,6 +25,18 @@
   --warn-bg: #fdf1e5;
   --bad: #b42318;
   --bad-bg: #fdecea;
+  /* 기부 위기 감지 — 노랑·주황·빨강을 옅게 */
+  --risk-wash: #fff9f0;
+  --risk-line: #f6dfc6;
+  --risk-amber: #fff1d2;
+  --risk-orange: #ffe5cf;
+  --risk-red: #fce1dc;
+  --risk-hover: #fff0dc;
+  --risk-ink: #93400f;
+  --risk-row-warn: #fffaee;
+  --risk-row-bad: #fef2ef;
+  --risk-mark-warn: #edb95a;
+  --risk-mark-bad: #e9806e;
 }
 
 @theme inline {
@@ -41,6 +53,17 @@
   --color-warn-bg: var(--warn-bg);
   --color-bad: var(--bad);
   --color-bad-bg: var(--bad-bg);
+  --color-risk-wash: var(--risk-wash);
+  --color-risk-line: var(--risk-line);
+  --color-risk-amber: var(--risk-amber);
+  --color-risk-orange: var(--risk-orange);
+  --color-risk-red: var(--risk-red);
+  --color-risk-hover: var(--risk-hover);
+  --color-risk-ink: var(--risk-ink);
+  --color-risk-row-warn: var(--risk-row-warn);
+  --color-risk-row-bad: var(--risk-row-bad);
+  --color-risk-mark-warn: var(--risk-mark-warn);
+  --color-risk-mark-bad: var(--risk-mark-bad);
   --font-sans: "Pretendard Variable", Pretendard, "IBM Plex Sans KR", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -57,23 +80,23 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* 실시간 티커 하이라이트 */
-@keyframes flash-in {
-  0% {
-    background-color: #fff3c4;
-    transform: translateY(-6px);
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    background-color: transparent;
+/* 기부 전광판: 같은 목록 두 벌을 절반만큼 밀어 끊김 없이 반복 */
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-50%);
   }
 }
-.ticker-new {
-  animation: flash-in 2.4s ease-out both;
+.ticker-band {
+  overflow: clip;
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll linear infinite;
+}
+.ticker-band:hover .ticker-track,
+.ticker-band:focus-within .ticker-track {
+  animation-play-state: paused;
 }
 
 /* 기부 도우미 말풍선: 위아래로 살짝 떠다님 */
@@ -89,9 +112,39 @@ body {
 .bubble-float {
   animation: bubble-float 3.2s ease-in-out infinite;
 }
+/* 기부 지도 상세: 좁은 화면은 지도 위로 올라오고, 넓은 화면은 지도 옆에서 오른쪽으로 펼쳐짐 */
+@keyframes sheet-open {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes sheet-open-side {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+.sheet-open {
+  animation: sheet-open 0.22s ease-out;
+}
+@media (min-width: 80rem) {
+  .sheet-open {
+    animation-name: sheet-open-side;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .bubble-float {
+  .bubble-float,
+  .sheet-open,
+  .ticker-track {
     animation: none;
+  }
+  /* 움직임을 끈 사용자는 손으로 밀어서 봄 */
+  .ticker-band {
+    overflow-x: auto;
+  }
+  .ticker-track > :nth-child(2) {
+    display: none;
   }
 }
 

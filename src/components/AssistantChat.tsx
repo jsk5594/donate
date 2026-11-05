@@ -124,7 +124,7 @@ export function AssistantChat({ engine, sampleCode, floating = false, onClose }:
           id={`chat-input${floating ? "-floating" : ""}`}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="예: D-1A2B 내 기부금 어디에 쓰였어?"
+          placeholder="예: D-1A2B3C4D 내 기부금 어디에 쓰였어?"
           maxLength={500}
           autoComplete="off"
           className="min-w-0 flex-1 rounded-lg border border-line px-4 py-2.5 text-sm"

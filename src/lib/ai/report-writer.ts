@@ -141,7 +141,7 @@ function demoReport(detail: CampaignDetail, f: SettlementFacts): string {
     flagged.length === 0
       ? ` ○ 모든 판정 항목이 양호합니다. 모금부터 정산까지 기준 안에서 운영된 모집건입니다.`
       : ` ○ ${flagged.map((c) => c.label).join(", ")} 항목은 다음 모집 때 개선이 필요합니다.`,
-    ` ○ 기부해 주신 분들께: 내 기부금이 어디에 쓰였는지는 '나의 기부내역'에서 기부코드로 확인하실 수 있습니다.`,
+    ` ○ 기부해 주신 분들께: 내 기부금이 어디에 쓰였는지는 '기부내역' 페이지에서 기부코드로 확인하실 수 있습니다.`,
     ``,
     `※ 본 보고서는 집행 완료(${fmtDate(campaign.completedAt!)}) 후 원장 수치로 자동 생성되어 ${fmtDate(publishDateOf(campaign.completedAt!))}에 게시되었습니다.`,
   ].join("\n");

@@ -1,14 +1,5 @@
 import Link from "next/link";
-
-const NAV = [
-  { href: "/", label: "홈" },
-  { href: "/status", label: "기부 현황" },
-  { href: "/monitor", label: "감시 현황" },
-  { href: "/organizations", label: "주관기관 감사" },
-  { href: "/rules", label: "운영 세칙" },
-  { href: "/reports", label: "기부 보고서" },
-  { href: "/my", label: "나의 기부내역" },
-];
+import { HeaderNav } from "./HeaderNav";
 
 export function Header() {
   return (
@@ -20,16 +11,10 @@ export function Header() {
             <circle cx="14" cy="14" r="4" stroke="#1F4FD8" strokeWidth="2" />
             <circle cx="14" cy="14" r="1.5" fill="#1F4FD8" />
           </svg>
-          <span className="whitespace-nowrap text-xl font-bold tracking-tight">기부CCTV</span>
+          <span className="whitespace-nowrap text-2xl font-bold tracking-tight">기부CCTV</span>
           <span className="hidden text-xs text-muted sm:inline">기부받은 돈 = 쓰인 돈 + 잔액, 누구나 확인</span>
         </Link>
-        <nav className="ml-auto flex flex-wrap items-center gap-1 text-sm">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="rounded-lg px-3 py-2 text-foreground hover:bg-primary-soft hover:text-primary">
-              {n.label}
-            </Link>
-          ))}
-        </nav>
+        <HeaderNav />
       </div>
     </header>
   );

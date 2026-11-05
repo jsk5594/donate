@@ -12,17 +12,6 @@ export type ExpenseType = "사업수행비용" | "일반관리비용" | "모금�
 /** 예정(모집 시작 전) → 모집중 → 집행중 → 종료(모집 종료, 집행 미완) → 완료(집행·정산 완료, 잔액 0) */
 export type CampaignStatus = "예정" | "모집중" | "집행중" | "종료" | "완료";
 
-/** 화면 분류용 3단계: 진행중(모집중·집행중·종료) / 진행 예정 / 완료 */
-export type CampaignPhase = "진행중" | "진행 예정" | "완료";
-
-export function phaseOf(status: CampaignStatus | string): CampaignPhase {
-  if (status === "예정") return "진행 예정";
-  if (status === "완료") return "완료";
-  return "진행중";
-}
-
-export const PHASES: CampaignPhase[] = ["진행중", "진행 예정", "완료"];
-
 /** 화면 표시용 진행상황 3구분: 모집중·집행중 → 진행중 / 예정 → 진행 예정 / 종료·완료 → 종료 */
 export const STAGES = ["진행중", "진행 예정", "종료"] as const;
 export type Stage = (typeof STAGES)[number];
@@ -72,7 +61,7 @@ export interface DonationRecord {
 export interface PublicDonation {
   id: string;
   campaignId: string;
-  donorCode: string; // D-XXXX (해시 기반)
+  donorCode: string; // D-XXXXXXXX (해시 기반)
   donorAlias: string; // 김*성, ㈜한*전자
   donorType: DonorType;
   amount: number;

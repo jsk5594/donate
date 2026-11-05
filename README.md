@@ -23,16 +23,17 @@ npm run db:seed    # 5개년 가상 데이터를 data/donation-cctv.db(SQLite)�
 
 | 경로 | 내용 |
 |---|---|
-| `/` | 총 기부받은 금액·총 기부된 금액(큰 숫자+도넛), 전체 대차대조표(항목 클릭 → 카드), 실시간 기부 티커, 확인 필요 모집건, 항목별 카드 |
+| `/` | 총 기부받은 금액·총 기부된 금액(큰 숫자+도넛), 전체 대차대조표(항목 클릭 → 카드), 최근 기부 전광판(오른쪽→왼쪽으로 흐르는 띠), 기부 지도(시·도별 모집건, 지역을 누르면 접힌 상세, 경계는 `scripts/build-korea-map.mjs`로 생성), 확인 필요 모집건, 항목별 카드 |
 | `/categories/[id]` | 항목(재난·고향사랑·복지·교육·환경) 합산 대차대조표 |
 | `/campaigns/[id]` | 세부 항목(거제도 홍수 등) 대차대조표, 운영 세칙 6개 항목 판정, 최근 입출금 |
 | `/status` | 기부 현황 조회(연도·항목·진행상황 체크, 나열형/폴더형) |
-| `/monitor` | 전체 모집건 기부투명도지수 표(위반·주의·양호) |
+| `/status?tab=risk` | 기부 위기 감지: 위반·주의 모집건 표(연도·진행상황 조회, 머리글 클릭 정렬) |
 | `/rules`, `/rules/[slug]` | 기부금 운영 세칙 게시판(8개 장) |
 | `/` (챗봇) | **기부 도우미** — 기부코드·모집건·기관을 질문에서 찾아 원장을 조회하고 AI가 그 데이터로만 답변 |
 | `/organizations`, `/organizations/[id]` | **주관기관 AI 감사** — 5년 결산 공시·외부감사·처분 이력·현재 판정을 AI가 해석해 신뢰 등급·근거·권고 제시 |
 | `/reports`, `/reports/[id]` | **AI 결산 보고서** — 기부 완료 건을 AI가 자동 작성, 금액·비율 원장 대조 검증 통과 시 완료 7일 후 자동 게시 |
-| `/my` | 나의 기부내역(기부코드 D-XXXX 조회, 내 기부금의 비례 배분, `?code=`로 바로 조회) |
+| `/donations` | 기부내역: 함께 만든 결과, 나의 기부내역(기부코드 D-XXXXXXXX 조회, 비례 배분, 나눔 단계, `?code=`로 바로 조회), 우수기부자(구분·항목·기간), 꾸준한 동행, 기부자들이 남긴 말 |
+| `/donations/messages` | 기부자들이 남긴 말 모아보기(항목별) |
 | `/api/live`, `/api/my`, `/api/campaigns/[id]`, `/api/chat`, `/api/organizations/[id]/audit` | 티커·본인조회·오픈API·챗봇·기관 감사 |
 
 ## 구조
@@ -44,7 +45,7 @@ src/lib/db.ts            임시 DB 읽기(data/donation-cctv.db, node:sqlite)
 src/lib/index-trend.ts   완료 모집건 기부투명도지수 시점별 재판정(월별·연별 추이)
 scripts/seed-db.mjs      생성기 → SQLite 저장(npm run db:seed)
 src/lib/repository.ts    저장소 인터페이스 + MockRepository. 페이지는 이 모듈만 호출
-src/lib/pseudonymize.ts  가명처리(김*성, ㈜한*전자) + 기부코드(D-XXXX) 생성
+src/lib/pseudonymize.ts  가명처리(김*성, ㈜한*전자) + 기부코드(D-XXXXXXXX) 생성
 src/lib/rules.ts         판정 규칙(법정 모금비용 한도, 운영비 10%, 사업비 65%, 잔액, 공개주기)
 src/lib/rules-content.ts 운영 세칙 게시판 본문
 src/lib/report.ts        결산 보고서 '사실 블록'(원장 수치) + 검증용 허용 금액 집합
@@ -80,6 +81,10 @@ src/components/          BalanceSheetChart(대차대조표), BalanceExplorer(클
 - `AI_PROVIDER`로 제공자 고정(비우면 키가 있는 첫 제공자). `OPENAI_BASE_URL`로 Ollama 등 OpenAI 호환 서버 연결 가능
 - 키가 없으면 **데모 모드**: 같은 원장 지표로 규칙 기반 응답을 만들어 흐름을 시연하고, 화면에 "데모 모드(AI 미연결)"로 표시
 - 신뢰 장치: AI에는 원장에서 조회한 데이터만 전달 · 감사의견은 JSON 형식 검증 · 결산 보고서는 본문 금액·비율을 원장과 대조해 불일치 시 게시하지 않음
+
+## 뉴스 연결
+
+메인 페이지 '최신 기부 뉴스' 카드는 [네이버 뉴스 검색 API](https://developers.naver.com/apps)를 씁니다. 애플리케이션을 등록(사용 API: 검색)한 뒤 `.env.local`의 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`에 넣고 개발 서버를 다시 시작하세요. 최신 기사 3건을 보여 주고, 누르면 언론사 원문으로 이동합니다. API가 썸네일을 주지 않아 기사 페이지의 대표 이미지(og:image)를 읽어 쓰며, 없으면 회색 칸으로 표시합니다. 키가 없으면 가상 기사를 '가상 데이터'로 표시하고 사이트 안의 가상 기사 페이지(`/news/[id]`)로 연결합니다. 응답은 서버 메모리에 30분 보관합니다.
 
 ## 모의데이터 안내
 

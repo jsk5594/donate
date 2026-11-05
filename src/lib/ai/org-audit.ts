@@ -9,8 +9,8 @@
 import { won, pct } from "../format";
 import { getOrganization, ORGANIZATIONS, type Organization } from "../org-data";
 import { getRepository } from "../repository";
-import { legalFundraisingCap, POLICY } from "../rules";
-import type { CampaignSummary, HealthLevel } from "../types";
+import { legalFundraisingCap, POLICY, SCORE_BANDS } from "../rules";
+import { stageOf, type CampaignSummary, type HealthLevel } from "../types";
 import { generate, parseJsonObject } from "./client";
 import { DEMO_ENGINE, type EngineInfo } from "./config";
 
@@ -28,7 +28,8 @@ export interface OrgMetrics {
   years: number;
   totalReceived: number;
   avgProgram: number;
-  latestProgram: number;
+  latestProgram: number; // 수입 대비
+  latestProgramShare: number; // 총지출 대비 — 모집건 판정과 같은 기준
   programTrend: number; // 최근 − 최초 (비율 포인트)
   sustainedProgramDecline: boolean; // 최근 2개 연도 모두 최초 연도보다 낮음
   latestAdmin: number;
@@ -81,6 +82,7 @@ export async function computeOrgMetrics(org: Organization, campaigns?: CampaignS
     totalReceived,
     avgProgram: ys.reduce((s, y) => s + y.program, 0) / (totalReceived || 1),
     latestProgram: r(last, last.program),
+    latestProgramShare: last.program / (last.program + last.admin + last.fundraising || 1),
     programTrend: r(last, last.program) - r(first, first.program),
     sustainedProgramDecline: ys.length >= 3 && ys.slice(-2).every((y) => r(y, y.program) < r(first, first.program) - 0.03),
     latestAdmin: r(last, last.admin),
@@ -94,7 +96,7 @@ export async function computeOrgMetrics(org: Organization, campaigns?: CampaignS
     missingAudits: ys.filter((y) => y.auditOpinion === "미실시").length,
     majorIssues: org.issues.filter((i) => i.severity === "중대").length,
     minorIssues: org.issues.filter((i) => i.severity === "경미").length,
-    currentCampaigns: current.map((s) => ({ id: s.campaign.id, title: s.campaign.title, status: s.campaign.status, health: s.health.overall, score: s.health.score })),
+    currentCampaigns: current.map((s) => ({ id: s.campaign.id, title: s.campaign.title, status: stageOf(s.campaign.status), health: s.health.overall, score: s.health.score })),
     indicatorScore: 0,
   };
   m.indicatorScore = indicatorScore(m);
@@ -103,8 +105,8 @@ export async function computeOrgMetrics(org: Organization, campaigns?: CampaignS
 
 function indicatorScore(m: OrgMetrics): number {
   let s = 100;
-  if (m.latestProgram < POLICY.programShareMin) s -= 10;
-  else if (m.latestProgram < POLICY.programShareGood) s -= 5;
+  if (m.latestProgramShare < POLICY.programShareMin) s -= 10;
+  else if (m.latestProgramShare < POLICY.programShareGood) s -= 5;
   // 한 해만 떨어진 경우(대형 재난 직후 등)는 제외하고, 2년 이상 이어진 하락만 감점
   if (m.programTrend < -0.1 && m.sustainedProgramDecline) s -= 4;
   if (m.latestAdmin > POLICY.adminRatioBad) s -= 8;
@@ -118,17 +120,19 @@ function indicatorScore(m: OrgMetrics): number {
   s -= m.missingAudits * 2;
   s -= m.majorIssues * 10 + m.minorIssues * 2;
   s -= m.currentCampaigns.filter((c) => c.health === "위반").length * 4;
+  // 위반 판정을 받은 모집건이 돌아가는 동안에는 '신뢰 가능'이 될 수 없음
+  if (m.currentCampaigns.some((c) => c.health === "위반")) s = Math.min(s, SCORE_BANDS.good - 1);
   return Math.max(0, Math.min(100, Math.round(s)));
 }
 
 export function gradeOf(score: number): TrustGrade {
-  return score >= 80 ? "신뢰 가능" : score >= 50 ? "주의 필요" : "신중 검토";
+  return score >= SCORE_BANDS.good ? "신뢰 가능" : score >= SCORE_BANDS.warn ? "주의 필요" : "신중 검토";
 }
 
 export function signalsOf(m: OrgMetrics): OrgSignal[] {
   const lv = (bad: boolean, warn: boolean): HealthLevel => (bad ? "위반" : warn ? "주의" : "양호");
   return [
-    { key: "program", label: "최근 사업수행비용 비율", level: lv(m.latestProgram < POLICY.programShareMin, m.latestProgram < POLICY.programShareGood), value: `${pct(m.latestProgram)} (5년 평균 ${pct(m.avgProgram)})`, basis: "BBB 65% 이상 · 권장 75%" },
+    { key: "program", label: "최근 사업수행비용 비중 (총지출 대비)", level: lv(m.latestProgramShare < POLICY.programShareMin, m.latestProgramShare < POLICY.programShareGood), value: `${pct(m.latestProgramShare)} (수입 대비 ${pct(m.latestProgram)})`, basis: "BBB 65% 이상 · 권장 75%" },
     { key: "admin", label: "최근 운영비 비율", level: lv(m.latestAdmin > POLICY.adminRatioBad, m.latestAdmin > POLICY.adminRatioWarn), value: `${pct(m.latestAdmin)} (5년 ${m.adminTrend >= 0 ? "+" : ""}${(m.adminTrend * 100).toFixed(1)}%p)`, basis: "운영 세칙 10% 이하" },
     { key: "fundraising", label: "모금비용 법정 한도 초과", level: lv(m.fundraisingOverCapYears >= 2, m.fundraisingOverCapYears === 1), value: `${m.fundraisingOverCapYears}개 연도 (최고 ${pct(m.maxFundraising)})`, basis: "기부금품법 제13조·시행령" },
     { key: "disclosure", label: "결산 공시 지연", level: lv(m.maxDelay > 30, m.maxDelay > 14), value: `평균 ${m.avgDelay.toFixed(0)}일 · 최장 ${m.maxDelay}일`, basis: "기부금품법 제14조 공개의무" },
@@ -145,7 +149,7 @@ const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부CCTV'의 감사 A
 - 숫자는 데이터에 있는 값만 그대로 인용합니다.
 - 단순 비율 비교를 넘어 추세(악화·개선), 사건의 재발 여부, 지표 간 연관(예: 운영비 증가와 공시 지연이 동시에 진행)을 해석하세요.
 - 일시적·설명 가능한 요인(예: 대형 재난 직후 이월)과 구조적 문제를 구분하세요.
-- grade는 "신뢰 가능" | "주의 필요" | "신중 검토" 중 하나, score는 0~100 정수.
+- 등급과 점수는 [기관 데이터]의 확정등급·확정점수로 이미 정해져 있습니다. grade와 score에 그 값을 그대로 쓰고, 그 등급에 맞게 근거를 해석하세요.
 - 기부자에게 하는 말투(존댓말, 쉬운 표현). 단정적 비난 대신 근거 중심.
 출력 JSON 형식:
 {"grade": string, "score": number, "headline": string(한 문장), "summary": string(3~4문장),
@@ -158,7 +162,8 @@ function dataForPrompt(org: Organization, m: OrgMetrics) {
     연도별결산: org.years.map((y) => ({
       연도: y.year,
       기부금수입: won(y.received),
-      사업수행비용비율: pct(y.program / y.received),
+      사업수행비용비율_수입대비: pct(y.program / y.received),
+      사업수행비용비중_총지출대비: pct(y.program / (y.program + y.admin + y.fundraising || 1)),
       운영비비율: pct(y.admin / y.received),
       모금비용비율: pct(y.fundraising / y.received),
       법정모금비용한도: pct(legalFundraisingCap(y.received), 0),
@@ -169,8 +174,9 @@ function dataForPrompt(org: Organization, m: OrgMetrics) {
     })),
     처분지적이력: org.issues,
     현재모집건판정: m.currentCampaigns,
-    참고지표점수: m.indicatorScore,
-    판정기준: { 사업비비율: "65% 이상(권장 75%)", 운영비: "10% 이하", 모금비용: "법정 한도 이하", 공시: "기한 내", 이월잔액: "30% 이하" },
+    확정등급: gradeOf(m.indicatorScore),
+    확정점수: m.indicatorScore,
+    판정기준: { 사업비비중: "총지출의 65% 이상(권장 75%)", 운영비: "10% 이하", 모금비용: "법정 한도 이하", 공시: "기한 내", 이월잔액: "30% 이하" },
   };
 }
 
@@ -207,7 +213,9 @@ export async function auditOrganization(orgId: string): Promise<OrgAuditResult |
   let result: OrgAuditResult;
   const parsed = ai ? parseJsonObject<OrgAuditOpinion>(ai.text) : null;
   if (ai && isOpinion(parsed)) {
-    parsed.score = Math.max(0, Math.min(100, Math.round(parsed.score)));
+    // 목록 배지와 감사의견이 어긋나지 않도록 등급·점수는 지표 값으로 고정
+    parsed.grade = gradeOf(m.indicatorScore);
+    parsed.score = m.indicatorScore;
     result = { organizationId: orgId, opinion: parsed, engine: ai.engine, generatedAt: new Date().toISOString() };
   } else {
     result = {
@@ -275,7 +283,7 @@ function demoOpinion(org: Organization, m: OrgMetrics): OrgAuditOpinion {
 
   const advice =
     grade === "신뢰 가능"
-      ? "정기 기부도 무리가 없어 보입니다. 기부 후 '나의 기부내역'에서 사용처를 확인해 보세요."
+      ? "정기 기부도 무리가 없어 보입니다. 기부 후 '기부내역' 페이지에서 사용처를 확인해 보세요."
       : grade === "주의 필요"
         ? "기부 전 최근 공개보고서와 다음 공시에서 지적 사항이 개선되는지 확인하고, 정기 기부보다 일시 기부를 권합니다."
         : "같은 분야의 다른 기관과 비교해 보시고, 기부하신다면 사용처를 지정할 수 있는 모집건을 선택하세요.";

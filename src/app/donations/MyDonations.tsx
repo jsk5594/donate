@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { fmtDateTime, pct, won } from "@/lib/format";
+import { fmtDate, fmtDateTime, pct, won, wonShort } from "@/lib/format";
 import type { MyDonationsResult } from "@/lib/repository";
 
-/** initialCode/initialResult: 챗봇 등에서 /my?code=D-XXXX 로 들어오면 서버에서 미리 조회한 결과 */
+/** initialCode/initialResult: 챗봇 등에서 /donations?code=D-XXXXXXXX 로 들어오면 서버에서 미리 조회한 결과 */
 export function MyDonations({ samples, initialCode, initialResult }: { samples: { code: string; alias: string; count: number }[]; initialCode?: string; initialResult?: MyDonationsResult | null }) {
   const [code, setCode] = useState(initialCode ?? "");
   const [result, setResult] = useState<MyDonationsResult | null>(initialResult ?? null);
@@ -48,7 +48,7 @@ export function MyDonations({ samples, initialCode, initialResult }: { samples: 
           기부코드
         </label>
         <div className="flex gap-2">
-          <input id="code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="D-1A2B" className="flex-1 rounded-lg border border-line px-4 py-3 font-mono text-lg tracking-wider" autoComplete="off" />
+          <input id="code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="D-1A2B3C4D" className="flex-1 rounded-lg border border-line px-4 py-3 font-mono text-lg tracking-wider" autoComplete="off" />
           <button type="submit" disabled={busy || !code.trim()} className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-[#163BA3] disabled:opacity-60">
             {busy ? "조회 중…" : "조회"}
           </button>
@@ -74,6 +74,31 @@ export function MyDonations({ samples, initialCode, initialResult }: { samples: 
 
       {result && alloc && (
         <>
+          <section className="rounded-xl border border-ok/30 bg-ok-bg p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-ok">{result.standing.tier}</p>
+                <p className="mt-1 text-xl font-bold">{result.donorAlias}님의 기부로 <span className="text-ok tnum">{won(alloc.program)}</span>이 수혜자에게 닿았습니다</p>
+                <p className="mt-1 text-sm text-foreground/80">
+                  {fmtDate(result.standing.firstDonatedAt)}부터 모집건 {result.standing.campaigns}개와 함께했고, 그중 {result.standing.completedCampaigns}개는 끝까지 전달을 마쳤습니다.
+                </p>
+              </div>
+              {/* 순위는 상위 절반일 때만 보여줌. 기부 규모로 누군가를 민망하게 만들지 않기 위함 */}
+              {result.standing.topPercent <= 50 && (
+                <div className="rounded-lg bg-card px-4 py-2 text-center">
+                  <div className="text-xs text-muted">{result.standing.type} 기부자 {result.standing.of.toLocaleString("ko-KR")}{result.standing.type === "개인" ? "명" : "곳"} 중</div>
+                  <div className="text-xl font-bold text-ok tnum">상위 {result.standing.topPercent < 10 ? result.standing.topPercent.toFixed(1) : Math.ceil(result.standing.topPercent)}%</div>
+                </div>
+              )}
+            </div>
+            <ul className="mt-3 flex flex-wrap gap-2 text-xs">
+              {result.standing.categories.map((c) => (
+                <li key={c.name} className="rounded-full bg-card px-2.5 py-1 font-semibold">{c.name} <span className="font-normal text-muted tnum">{wonShort(c.amount)}</span></li>
+              ))}
+            </ul>
+            {result.standing.nextTier && <p className="mt-3 text-xs text-foreground/70">{won(result.standing.nextTier.remaining)} 더 함께하시면 {result.standing.nextTier.name} 단계가 됩니다.</p>}
+          </section>
+
           <section className="rounded-xl border border-line bg-card p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
@@ -96,7 +121,7 @@ export function MyDonations({ samples, initialCode, initialResult }: { samples: 
                 <div style={{ width: `${(alloc.fundraising / result.total) * 100}%`, background: "var(--out-fundraising)" }} />
                 <div style={{ width: `${(alloc.balance / result.total) * 100}%`, background: "var(--out-balance)" }} />
               </div>
-              <ul className="mt-2 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+              <ul className="mt-2 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
                 <Leg c="var(--out-program)" l="기부됨" v={alloc.program} />
                 <Leg c="var(--out-admin)" l="운영비" v={alloc.admin} />
                 <Leg c="var(--out-fundraising)" l="모금비용" v={alloc.fundraising} />
