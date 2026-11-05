@@ -76,6 +76,25 @@ body {
   animation: flash-in 2.4s ease-out both;
 }
 
+/* 기부 도우미 말풍선: 위아래로 살짝 떠다님 */
+@keyframes bubble-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.bubble-float {
+  animation: bubble-float 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble-float {
+    animation: none;
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;

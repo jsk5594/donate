@@ -23,6 +23,15 @@ export function phaseOf(status: CampaignStatus | string): CampaignPhase {
 
 export const PHASES: CampaignPhase[] = ["진행중", "진행 예정", "완료"];
 
+/** 화면 표시용 진행상황 3구분: 모집중·집행중 → 진행중 / 예정 → 진행 예정 / 종료·완료 → 종료 */
+export const STAGES = ["진행중", "진행 예정", "종료"] as const;
+export type Stage = (typeof STAGES)[number];
+export function stageOf(status: CampaignStatus): Stage {
+  if (status === "예정") return "진행 예정";
+  if (status === "종료" || status === "완료") return "종료";
+  return "진행중";
+}
+
 export interface Category {
   id: string;
   name: string; // 재난, 고향사랑, 복지, 교육, 환경 ...
@@ -122,12 +131,17 @@ export interface HealthCheck {
   threshold: string; // 기준 (예: ≤ 10%)
   basis: string; // 근거 (법령/세칙)
   detail: string;
+  /** 기부투명도지수에 기여한 점수 / 배점 */
+  points: number;
+  maxPoints: number;
 }
 
 export interface CampaignHealth {
   campaignId: string;
   overall: HealthLevel;
   checks: HealthCheck[];
+  /** 기부투명도지수(0~100). 진행 예정은 판정하지 않으므로 null */
+  score: number | null;
 }
 
 export interface CampaignSummary {

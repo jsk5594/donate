@@ -98,8 +98,8 @@ function contextForPrompt(c: Context) {
       운영비: pct(s.sheet.outflow.admin / (s.sheet.inflow.total || 1)),
       모금비용: pct(s.sheet.outflow.fundraising / (s.sheet.inflow.total || 1)),
       미집행잔액: won(s.sheet.outflow.balance),
-      판정: s.health.overall,
-      확인필요: s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`),
+      판정: s.campaign.status === "예정" ? `판정 없음(진행 예정, ${s.campaign.startDate} 모집 시작)` : `기부투명도지수 ${s.health.score}점(${s.health.overall})`,
+      확인필요: s.campaign.status === "예정" ? [] : s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`),
     })),
     언급된주관기관: c.orgs.map((o) => ({ 이름: o.name, 지표등급: o.grade, 지표점수: o.score, 평균사업비비율: pct(o.avgProgram), 최근운영비: pct(o.latestAdmin), 모금비용한도초과연도수: o.overCap, 최장공시지연일: o.maxDelay, 처분지적: o.issues })),
   };
@@ -168,10 +168,13 @@ function demoAnswer(q: string, c: Context): string {
     const s = c.campaigns[0];
     const t = s.sheet.inflow.total || 1;
     const flagged = s.health.checks.filter((k) => k.level !== "양호");
+    if (s.campaign.status === "예정")
+      return `${s.campaign.title}은 진행 예정 모집건입니다. ${fmtDate(s.campaign.startDate)}에 모집을 시작하며(목표 ${won(s.campaign.goal)}), 운영 세칙 판정은 모집 시작 후부터 합니다.`;
     return [
       `${s.campaign.title}(${s.campaign.status})은 지금까지 ${won(s.sheet.inflow.total)}을 모금했습니다.`,
       `- 사업비 ${pct(s.sheet.outflow.program / t)} · 운영비 ${pct(s.sheet.outflow.admin / t)} · 모금비용 ${pct(s.sheet.outflow.fundraising / t)}`,
       `- 아직 쓰이지 않은 돈 ${won(s.sheet.outflow.balance)}`,
+      `- 기부투명도지수 ${s.health.score}점(${s.health.overall})`,
       flagged.length ? `- 확인 필요: ${flagged.map((k) => `${k.label} ${k.value}`).join(", ")}` : `- 운영 세칙 판정은 모두 양호합니다.`,
     ].join("\n");
   }
@@ -179,7 +182,7 @@ function demoAnswer(q: string, c: Context): string {
   if (/문제|위반|주의|이상|확인\s*필요|위험/.test(q)) {
     const list = c.overview.campaigns.filter((s) => s.health.overall !== "양호");
     if (!list.length) return "현재 운영 세칙 판정에서 '주의' 이상인 모집건은 없습니다.";
-    return [`운영 세칙 판정에서 확인이 필요한 모집건은 ${list.length}건입니다.`, ...list.map((s) => `- [${s.health.overall}] ${s.campaign.title}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")}`)].join("\n");
+    return [`운영 세칙 판정에서 확인이 필요한 모집건은 ${list.length}건입니다.`, ...list.map((s) => `- [${s.health.score}점 ${s.health.overall}] ${s.campaign.title}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")}`)].join("\n");
   }
 
   if (/운영비|모금비|기준|세칙|몇\s*%|한도/.test(q)) {

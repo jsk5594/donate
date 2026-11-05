@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { HealthBadge } from "@/components/HealthBadge";
+import { HealthBadge, ScoreBadge } from "@/components/HealthBadge";
 import { computeOrgMetrics, signalsOf } from "@/lib/ai/org-audit";
 import { pct, won } from "@/lib/format";
 import { getOrganization } from "@/lib/org-data";
@@ -119,7 +119,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
               <ul className="mt-3 space-y-2 text-sm">
                 {m.currentCampaigns.map((c) => (
                   <li key={c.id} className="flex items-center gap-2">
-                    <HealthBadge level={c.health} />
+                    <ScoreBadge score={c.score} level={c.health} />
                     <Link href={`/campaigns/${c.id}`} className="font-semibold hover:text-primary">
                       {c.title}
                     </Link>

@@ -15,12 +15,14 @@ interface Props {
   campaignEnded?: boolean;
   initialSelected?: SegmentKey | null;
   height?: number;
+  /** donations를 일부만 넘길 때(메인 전체 화면) 유형별 전체 건수·최고액 */
+  donorStats?: Partial<Record<PublicDonation["donorType"], { count: number; max: number }>>;
 }
 
 const DONOR_TYPE_OF: Partial<Record<SegmentKey, PublicDonation["donorType"]>> = { individual: "개인", corporate: "기업", group: "단체" };
 const EXPENSE_TYPE_OF: Partial<Record<SegmentKey, PublicExpense["type"]>> = { program: "사업수행비용", admin: "일반관리비용", fundraising: "모금비용" };
 
-export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, campaignEnded, initialSelected = null, height }: Props) {
+export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, campaignEnded, initialSelected = null, height, donorStats }: Props) {
   const [selected, setSelected] = useState<SegmentKey | null>(initialSelected);
   const [openStat, setOpenStat] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -56,7 +58,7 @@ export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, ca
 
           <div className="p-5">
             {seg.side === "in" && seg.key !== "other" && (
-              <DonorCards donations={donations.filter((d) => d.donorType === DONOR_TYPE_OF[seg.key])} total={seg.amount} campaignTitles={campaignTitles} showAll={showAll} onMore={() => setShowAll(true)} />
+              <DonorCards donations={donations.filter((d) => d.donorType === DONOR_TYPE_OF[seg.key])} stats={donorStats?.[DONOR_TYPE_OF[seg.key]!]} total={seg.amount} campaignTitles={campaignTitles} showAll={showAll} onMore={() => setShowAll(true)} />
             )}
             {seg.key === "other" && (
               <p className="text-sm leading-relaxed text-muted">
@@ -95,15 +97,17 @@ export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, ca
   );
 }
 
-function DonorCards({ donations, total, campaignTitles, showAll, onMore }: { donations: PublicDonation[]; total: number; campaignTitles?: Record<string, string>; showAll: boolean; onMore: () => void }) {
+function DonorCards({ donations, stats, total, campaignTitles, showAll, onMore }: { donations: PublicDonation[]; stats?: { count: number; max: number }; total: number; campaignTitles?: Record<string, string>; showAll: boolean; onMore: () => void }) {
   const sorted = [...donations].sort((a, b) => b.donatedAt.localeCompare(a.donatedAt));
   const visible = showAll ? sorted : sorted.slice(0, 12);
-  const avg = donations.length ? total / donations.length : 0;
-  const max = donations.reduce((m, d) => Math.max(m, d.amount), 0);
+  const count = stats?.count ?? donations.length;
+  const avg = count ? total / count : 0;
+  const max = stats?.max ?? donations.reduce((m, d) => Math.max(m, d.amount), 0);
+  const partial = count > sorted.length;
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="건수" value={`${donations.length.toLocaleString("ko-KR")}건`} />
+        <Stat label="건수" value={`${count.toLocaleString("ko-KR")}건`} />
         <Stat label="합계" value={won(total)} />
         <Stat label="평균" value={won(avg)} />
         <Stat label="최고 1건" value={won(max)} />
@@ -135,7 +139,7 @@ function DonorCards({ donations, total, campaignTitles, showAll, onMore }: { don
       </ul>
       {!showAll && sorted.length > visible.length && (
         <button type="button" onClick={onMore} className="self-center rounded-lg border border-line px-4 py-2 text-sm hover:bg-[#F3F5F8]">
-          전체 {sorted.length.toLocaleString("ko-KR")}건 모두 보기
+          {partial ? `최근 ${sorted.length.toLocaleString("ko-KR")}건 보기 (전체 ${count.toLocaleString("ko-KR")}건)` : `전체 ${sorted.length.toLocaleString("ko-KR")}건 모두 보기`}
         </button>
       )}
     </div>

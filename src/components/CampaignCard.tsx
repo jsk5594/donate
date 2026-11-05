@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HealthBadge, StatusBadge } from "./HealthBadge";
+import { ScoreBadge, StatusBadge } from "./HealthBadge";
 import { fmtDate, pct, wonShort } from "@/lib/format";
 import type { CampaignSummary } from "@/lib/types";
 
@@ -20,7 +20,7 @@ export function CampaignCard({ s }: { s: CampaignSummary }) {
           </div>
           <div className="truncate text-[15px] font-bold">{s.campaign.title}</div>
         </div>
-        <HealthBadge level={s.health.overall} />
+        <ScoreBadge score={s.health.score} level={s.health.overall} />
       </div>
       <div className="flex items-baseline justify-between">
         <span className="text-lg font-bold tnum">{wonShort(s.sheet.inflow.total)}</span>

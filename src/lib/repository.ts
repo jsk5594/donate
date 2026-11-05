@@ -5,7 +5,8 @@
  * - 개인정보(이름·연락처·수혜자)는 여기서 가명처리되어 Public* 타입으로만 밖으로 나갑니다.
  */
 
-import { getDataset, interestIncomeFor, syntheticLiveDonations } from "./mock-data";
+import { loadDataset } from "./db";
+import { interestIncomeFor } from "./mock-data";
 import { donorCodeOf, toPublicDonation, toPublicExpense } from "./pseudonymize";
 import { evaluateHealth } from "./rules";
 import type { BalanceSheet, Campaign, CampaignSummary, Category, DonationRecord, ExpenseRecord, PublicDonation, PublicExpense } from "./types";
@@ -64,12 +65,13 @@ export function computeBalanceSheet(donations: Pick<DonationRecord, "donorType" 
   return { inflow, outflow, difference: inflow.total - outflow.total };
 }
 
-const otherInflowFor = interestIncomeFor;
+/** 이자 등 기타수입(가상 데이터 규칙) — 시점별 대차대조표 재계산에도 사용 */
+export const otherInflowFor = interestIncomeFor;
 
 // ---------- Mock 구현 ----------
 class MockRepository implements Repository {
   private get ds() {
-    return getDataset();
+    return loadDataset();
   }
 
   async listCategories() {
@@ -153,7 +155,14 @@ class MockRepository implements Repository {
 
   async getLiveDonations(now?: number, count = 12) {
     const titles = new Map(this.ds.campaigns.map((c) => [c.id, c.title]));
-    return syntheticLiveDonations(now ?? Date.now(), count).map((d) => ({ ...toPublicDonation(d), campaignTitle: titles.get(d.campaignId) ?? "" }));
+    // 실시간 합성 기부는 일시 중지 — DB에 있는 가장 최근 기부 N건
+    const t = new Date(now ?? Date.now()).toISOString();
+    const recent: DonationRecord[] = [];
+    for (let i = this.ds.donations.length - 1; i >= 0 && recent.length < count; i--) {
+      const d = this.ds.donations[i];
+      if (d.donatedAt <= t) recent.push(d);
+    }
+    return recent.map((d) => ({ ...toPublicDonation(d), campaignTitle: titles.get(d.campaignId) ?? "" }));
   }
 
   async findMyDonations(donorCode: string): Promise<MyDonationsResult | null> {
@@ -207,7 +216,7 @@ export function getRepository(): Repository {
 
 /** 데모용: '나의 기부내역' 테스트 코드 몇 개를 노출 */
 export function sampleDonorCodes(): { code: string; alias: string; count: number }[] {
-  const ds = getDataset();
+  const ds = loadDataset();
   const map = new Map<string, { alias: string; count: number; type: string }>();
   for (const d of ds.donations) {
     if (d.donorName === "익명") continue;

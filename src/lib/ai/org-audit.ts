@@ -42,7 +42,7 @@ export interface OrgMetrics {
   missingAudits: number;
   majorIssues: number;
   minorIssues: number;
-  currentCampaigns: { id: string; title: string; status: string; health: HealthLevel }[];
+  currentCampaigns: { id: string; title: string; status: string; health: HealthLevel; score: number | null }[];
   indicatorScore: number; // 0~100 (지표 기반 참고 점수)
 }
 
@@ -73,7 +73,8 @@ export async function computeOrgMetrics(org: Organization, campaigns?: CampaignS
   const last = ys[ys.length - 1];
   const totalReceived = ys.reduce((s, y) => s + y.received, 0);
   const all = campaigns ?? (await getRepository().getOverview()).campaigns;
-  const current = all.filter((s) => s.campaign.organizer === org.name);
+  // 현재 모집건: 완료되지 않은 것만(과거 완료건은 연도별 결산 이력에 반영)
+  const current = all.filter((s) => s.campaign.organizer === org.name && s.campaign.status !== "완료");
 
   const m: OrgMetrics = {
     years: ys.length,
@@ -93,7 +94,7 @@ export async function computeOrgMetrics(org: Organization, campaigns?: CampaignS
     missingAudits: ys.filter((y) => y.auditOpinion === "미실시").length,
     majorIssues: org.issues.filter((i) => i.severity === "중대").length,
     minorIssues: org.issues.filter((i) => i.severity === "경미").length,
-    currentCampaigns: current.map((s) => ({ id: s.campaign.id, title: s.campaign.title, status: s.campaign.status, health: s.health.overall })),
+    currentCampaigns: current.map((s) => ({ id: s.campaign.id, title: s.campaign.title, status: s.campaign.status, health: s.health.overall, score: s.health.score })),
     indicatorScore: 0,
   };
   m.indicatorScore = indicatorScore(m);
@@ -270,7 +271,7 @@ function demoOpinion(org: Organization, m: OrgMetrics): OrgAuditOpinion {
     `${first.year}~${last.year}년 ${m.years}년간 총 ${won(m.totalReceived)}을 모금했고, 평균 ${pct(m.avgProgram)}를 사업에 썼습니다. ` +
     `최근 연도 기준 사업비 ${pct(m.latestProgram)}, 운영비 ${pct(m.latestAdmin)}입니다.` +
     pattern +
-    (m.currentCampaigns.length ? ` 현재 진행 중인 모집건 판정은 ${m.currentCampaigns.map((c) => `${c.title}(${c.health})`).join(", ")}입니다.` : "");
+    (m.currentCampaigns.length ? ` 현재 진행 중인 모집건 판정은 ${m.currentCampaigns.map((c) => `${c.title}(${c.score === null ? "진행 예정" : `${c.score}점 ${c.health}`})`).join(", ")}입니다.` : "");
 
   const advice =
     grade === "신뢰 가능"

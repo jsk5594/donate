@@ -17,7 +17,8 @@ const GREETING: Msg = {
   content: "안녕하세요, 기부 도우미입니다. 내 기부금이 어디에 쓰였는지, 어떤 모집건에 문제가 있는지, 기관을 믿어도 되는지 물어보세요.",
 };
 
-export function AssistantChat({ engine, sampleCode }: { engine: EngineInfo; sampleCode?: string }) {
+/** floating: 떠 있는 대화창용(테두리 없이 부모 높이를 채우고 대화 영역이 남는 높이를 차지) */
+export function AssistantChat({ engine, sampleCode, floating = false, onClose }: { engine: EngineInfo; sampleCode?: string; floating?: boolean; onClose?: () => void }) {
   const [msgs, setMsgs] = useState<Msg[]>([GREETING]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,16 +63,23 @@ export function AssistantChat({ engine, sampleCode }: { engine: EngineInfo; samp
   }
 
   return (
-    <section className="flex flex-col rounded-xl border border-line bg-card" aria-label="기부 도우미 챗봇">
-      <header className="flex flex-wrap items-center gap-2 border-b border-line px-5 py-3">
+    <section className={`flex h-full flex-col bg-card ${floating ? "" : "rounded-xl border border-line"}`} aria-label="기부 도우미 챗봇">
+      <header className={`flex flex-wrap items-center gap-2 border-b border-line px-5 py-3 ${floating ? "bg-[#15202B] text-white [&_.text-muted]:text-[#B9C4D3]" : ""}`}>
         <h2 className="text-base font-bold">기부 도우미</h2>
-        <span className="text-sm text-muted">원장 데이터로만 답합니다</span>
+        <span className="text-xs text-muted">원장 데이터로만 답합니다</span>
         <span className="ml-auto">
           <AiEngineBadge engine={eng} />
         </span>
+        {onClose && (
+          <button type="button" onClick={onClose} aria-label="대화창 닫기" className="-mr-2 flex h-8 w-8 items-center justify-center rounded-md text-muted hover:bg-[#F3F5F8] hover:text-foreground">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
       </header>
 
-      <div ref={listRef} className="flex h-80 flex-col gap-3 overflow-y-auto px-5 py-4" aria-live="polite">
+      <div ref={listRef} className={`flex flex-col gap-3 overflow-y-auto px-5 py-4 ${floating ? "min-h-0 flex-1" : "h-80"}`} aria-live="polite">
         {msgs.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "bg-primary text-white" : "bg-[#F3F5F8] text-foreground"}`}>
@@ -109,11 +117,11 @@ export function AssistantChat({ engine, sampleCode }: { engine: EngineInfo; samp
           void send(input);
         }}
       >
-        <label htmlFor="chat-input" className="sr-only">
+        <label htmlFor={`chat-input${floating ? "-floating" : ""}`} className="sr-only">
           질문 입력
         </label>
         <input
-          id="chat-input"
+          id={`chat-input${floating ? "-floating" : ""}`}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="예: D-1A2B 내 기부금 어디에 쓰였어?"

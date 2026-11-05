@@ -325,6 +325,130 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
   },
 ];
 
+// ---------- 과거 5개년(2022~2025) 완료 모집건 ----------
+// 기존 모집건의 난수 순서를 바꾸지 않도록 별도 시드로 만들고 목록 끝에 붙입니다.
+// 기관별 성향은 주관기관 감사 데이터(org-data.ts)와 맞춤: 푸른바다=모금비용 높음, 따뜻한이웃=운영비 높음.
+const HISTORY_ORGS: Record<string, { name: string; admin: [number, number]; fundraising: [number, number] }[]> = {
+  disaster: [
+    { name: "강원도 재해구호기금(가상)", admin: [0.05, 0.075], fundraising: [0.03, 0.05] },
+    { name: "경북재해구호협회(가상)", admin: [0.04, 0.06], fundraising: [0.03, 0.045] },
+  ],
+  welfare: [
+    { name: "따뜻한이웃복지회(가상)", admin: [0.075, 0.115], fundraising: [0.04, 0.06] },
+    { name: "한끼나눔아동재단(가상)", admin: [0.05, 0.08], fundraising: [0.03, 0.05] },
+    { name: "어린이재활나눔재단(가상)", admin: [0.04, 0.06], fundraising: [0.03, 0.045] },
+  ],
+  education: [{ name: "배움다리교육재단(가상)", admin: [0.045, 0.065], fundraising: [0.025, 0.04] }],
+  environment: [
+    { name: "푸른바다시민연대(가상)", admin: [0.05, 0.07], fundraising: [0.11, 0.175] },
+    { name: "곶자왈생명숲네트워크(가상)", admin: [0.05, 0.07], fundraising: [0.03, 0.045] },
+  ],
+};
+const COUNTIES = [
+  ["하동군", "경남 하동군", "HD"],
+  ["영양군", "경북 영양군", "YY"],
+  ["고성군", "강원 고성군", "GS"],
+  ["울릉군", "경북 울릉군", "UL"],
+  ["남해군", "경남 남해군", "NH"],
+  ["단양군", "충북 단양군", "DY"],
+  ["신안군", "전남 신안군", "SA"],
+  ["봉화군", "경북 봉화군", "BH"],
+] as const;
+const HISTORY_TITLES: Record<string, { title: string; purpose: string }[]> = {
+  disaster: [
+    { title: "{r} 집중호우 피해 복구", purpose: "집중호우로 침수된 주택의 도배·장판과 생필품을 피해 가구에 지원했습니다." },
+    { title: "{r} 태풍 피해 주택 보수", purpose: "태풍으로 파손된 지붕·창호 보수비를 피해 가구에 지원했습니다." },
+    { title: "{r} 산불 이재민 생활 지원", purpose: "산불 이재민에게 임시 거처 임차료와 생활안정 자금을 지원했습니다." },
+    { title: "{r} 폭설 피해 농가 지원", purpose: "폭설로 무너진 비닐하우스 철거·재설치 비용을 피해 농가에 지원했습니다." },
+  ],
+  hometown: [
+    { title: "{c} 어르신 공공 목욕탕 운영", purpose: "목욕시설이 없는 마을 어르신을 위한 공공 목욕탕 1년 운영비를 지원했습니다." },
+    { title: "{c} 작은도서관 조성", purpose: "면 소재지 빈 건물을 고쳐 아동·청소년 작은도서관을 만들었습니다." },
+    { title: "{c} 농촌 왕진버스 운영", purpose: "병원이 먼 마을을 순회하는 의료 왕진버스를 1년간 운영했습니다." },
+    { title: "{c} 마을 공동부엌 조성", purpose: "홀로 사는 어르신의 끼니를 위한 마을 공동부엌을 만들고 운영했습니다." },
+  ],
+  welfare: [
+    { title: "독거어르신 여름나기 냉방 지원", purpose: "폭염 취약 독거어르신에게 선풍기·냉방비와 안부 확인 서비스를 제공했습니다." },
+    { title: "결식우려아동 주말 도시락", purpose: "주말 급식이 끊기는 아동에게 1년간 주말 도시락을 배달했습니다." },
+    { title: "장애아동 재활치료비 지원", purpose: "저소득 장애아동의 언어·물리 재활치료비를 1년간 지원했습니다." },
+    { title: "한부모가정 생계비 지원", purpose: "위기 한부모가정에 6개월 생계비와 양육용품을 지원했습니다." },
+  ],
+  education: [
+    { title: "농어촌 학생 코딩교실", purpose: "농어촌 초·중학생에게 방과후 코딩 수업과 교육용 노트북을 제공했습니다." },
+    { title: "저소득 대학생 장학금", purpose: "기초·차상위 가정 대학생에게 1년 학업장려 장학금을 지급했습니다." },
+    { title: "다문화가정 아동 한국어 교실", purpose: "다문화가정 아동의 학습을 돕는 한국어·기초학력 교실을 운영했습니다." },
+    { title: "청소년 진로 멘토링", purpose: "지역 청소년과 현직자를 1:1로 연결하는 진로 멘토링을 운영했습니다." },
+  ],
+  environment: [
+    { title: "{r} 연안 해양쓰레기 수거", purpose: "어촌계와 함께 연안 해양쓰레기를 수거하고 재활용 선별장을 운영했습니다." },
+    { title: "{r} 하천 생태 복원", purpose: "훼손된 하천 구간에 수생식물을 심고 생태 모니터링을 했습니다." },
+    { title: "{r} 도시숲 조성", purpose: "미세먼지 저감을 위한 도시숲에 나무를 심고 1년간 관리했습니다." },
+    { title: "{r} 갯벌 보전 활동", purpose: "갯벌 쓰레기 수거와 철새 서식지 보호 활동을 했습니다." },
+  ],
+};
+const REGIONS: Record<string, string[]> = {
+  disaster: ["경북 포항", "충남 공주", "강원 삼척", "전남 순천", "경남 밀양", "충북 괴산"],
+  welfare: ["전국", "서울·경기", "부산·경남", "대구·경북"],
+  education: ["전국", "전북·전남", "강원 산간", "경북 북부"],
+  environment: ["전남 여수", "경남 거제", "충남 태안", "인천 강화", "강원 춘천"],
+};
+
+function buildHistorySeeds(): CampaignSeed[] {
+  const rng = mulberry32(20220101);
+  const between = (a: number, b: number) => a + rng() * (b - a);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 86400000);
+  const out: CampaignSeed[] = [];
+  // 2022~2024년은 항목마다 2건, 2025년은 1건 추가(기존 2025년 완료 5건과 합쳐 해마다 10건 안팎)
+  const perYear: [number, number][] = [
+    [2022, 2],
+    [2023, 2],
+    [2024, 2],
+    [2025, 1],
+  ];
+  for (const [year, n] of perYear) {
+    for (const cat of CATEGORIES) {
+      for (let k = 0; k < n; k++) {
+        const t = HISTORY_TITLES[cat.id][Math.floor(rng() * HISTORY_TITLES[cat.id].length)];
+        const county = COUNTIES[Math.floor(rng() * COUNTIES.length)];
+        const region = cat.id === "hometown" ? county[1] : pick(rng, REGIONS[cat.id]);
+        const regionShort = region.replace(/^(경북|경남|충남|충북|전남|전북|강원|인천)\s/, "");
+        const org = cat.id === "hometown" ? { name: `${county[0]}(고향사랑기부제 지정기부)`, admin: [0.04, 0.06] as [number, number], fundraising: [0.02, 0.035] as [number, number] } : pick(rng, HISTORY_ORGS[cat.id]);
+        // 2025년분은 상반기에 끝나도록(REFERENCE_NOW 이전 완료)
+        const start = new Date(Date.UTC(year, Math.floor(between(0, year === 2025 ? 3 : 9)), 1 + Math.floor(between(0, 25))));
+        const end = addDays(start, Math.round(between(75, 210)));
+        const completed = addDays(end, Math.round(between(30, 150)));
+        // 공개: 대개 완료 후 5~16일, 10%는 늦게(22~40일 → 주의)
+        const lag = rng() < 0.1 ? Math.round(between(22, 40)) : Math.round(between(5, 16));
+        const received = Math.round(between(6000, 25000)) * 1_0000;
+        const admin = between(org.admin[0], org.admin[1]);
+        const fundraising = between(org.fundraising[0], org.fundraising[1]);
+        const seq = out.length + 1;
+        out.push({
+          id: `h${year}-${cat.id}-${k + 1}`,
+          categoryId: cat.id,
+          title: t.title.replace("{r}", regionShort).replace("{c}", county[0]),
+          region,
+          organizer: org.name,
+          registrationNo: cat.id === "hometown" ? `고향-${year}-${county[2]}-${String(seq).padStart(2, "0")}` : `행안-${year}-${String(100 + seq * 7).padStart(4, "0")}`,
+          purpose: t.purpose,
+          goal: Math.round((received / between(0.9, 1.1)) / 1000_0000) * 1000_0000,
+          startDate: iso(start),
+          endDate: iso(end),
+          status: "완료",
+          completedAt: iso(completed),
+          disclosureCycleDays: 14,
+          lastDisclosedAt: iso(addDays(completed, lag)),
+          plan: { received, program: 0, admin, fundraising, donations: Math.round(between(100, 260)) },
+        });
+      }
+    }
+  }
+  return out;
+}
+
+CAMPAIGN_SEEDS.push(...buildHistorySeeds());
+
 /** 이자수익 등 기타수입(가상): 수입의 0.1%를 천원 단위로 */
 export function interestIncomeFor(received: number) {
   return Math.round((received * 0.001) / 1000) * 1000;

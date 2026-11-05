@@ -2,10 +2,10 @@ import Form from "next/form";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CampaignCard } from "@/components/CampaignCard";
-import { HealthBadge } from "@/components/HealthBadge";
+import { ScoreBadge } from "@/components/HealthBadge";
 import { fmtDate, pct, won, wonShort } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
-import type { CampaignStatus, CampaignSummary } from "@/lib/types";
+import { STAGES, stageOf, type CampaignSummary, type Stage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -16,15 +16,6 @@ const COLORS = {
   fundraising: "var(--out-fundraising)",
 };
 
-
-/** 이 페이지의 진행상황 3구분: 모집중·집행중 → 진행중 / 예정 → 진행 예정 / 종료·완료 → 종료 */
-const STAGES = ["진행중", "진행 예정", "종료"] as const;
-type Stage = (typeof STAGES)[number];
-function stageOf(status: CampaignStatus): Stage {
-  if (status === "예정") return "진행 예정";
-  if (status === "종료" || status === "완료") return "종료";
-  return "진행중";
-}
 const STAGE_STYLE: Record<Stage, string> = {
   진행중: "bg-primary-soft text-primary",
   "진행 예정": "bg-warn-bg text-warn",
@@ -266,7 +257,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
                     <th className="px-3 py-2 text-right font-semibold">기부받은 돈</th>
                     <th className="px-3 py-2 text-right font-semibold">쓰인 돈</th>
                     <th className="px-3 py-2 text-right font-semibold">사업비 비율</th>
-                    <th className="px-5 py-2 text-left font-semibold">판정</th>
+                    <th className="px-5 py-2 text-left font-semibold">투명도지수</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -292,7 +283,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
                         <td className="px-3 py-2.5 text-right tnum">{upcoming ? <span className="text-xs text-muted">목표 {wonShort(c.goal)}</span> : wonShort(r.received)}</td>
                         <td className="px-3 py-2.5 text-right tnum">{upcoming ? "—" : wonShort(out)}</td>
                         <td className="px-3 py-2.5 text-right tnum">{out ? pct(r.program / out) : "—"}</td>
-                        <td className="px-5 py-2.5">{upcoming ? <span className="text-xs text-muted">시작 전</span> : <HealthBadge level={r.s.health.overall} />}</td>
+                        <td className="px-5 py-2.5">{upcoming ? <span className="text-muted">—</span> : <ScoreBadge score={r.s.health.score} level={r.s.health.overall} />}</td>
                       </tr>
                     );
                   })}

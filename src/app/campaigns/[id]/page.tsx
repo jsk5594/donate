@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BalanceExplorer } from "@/components/BalanceExplorer";
 import { HealthChecks } from "@/components/HealthChecks";
-import { HealthBadge, StatusBadge } from "@/components/HealthBadge";
+import { ScoreBadge, StatusBadge } from "@/components/HealthBadge";
 import { fmtDate, pct, won } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
 import { legalFundraisingCap } from "@/lib/rules";
@@ -46,7 +46,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <HealthBadge level={health.overall} size="md" />
+          <ScoreBadge score={health.score} level={health.overall} size="md" />
           {org && (
             <Link href={`/organizations/${org.id}`} className="rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold hover:bg-[#F3F5F8]">
               주관기관 AI 감사
@@ -76,7 +76,14 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
         <BalanceExplorer sheet={sheet} donations={detail.donations} expenses={detail.expenses} campaignEnded={ended} height={400} />
       </section>
 
-      <HealthChecks health={health} />
+      {campaign.status === "예정" ? (
+        <section className="rounded-xl border border-line bg-card p-5">
+          <h2 className="text-lg font-bold">운영 세칙 판정</h2>
+          <p className="mt-2 text-sm text-muted">진행 예정 모집건은 판정하지 않습니다. 모집이 시작되는 {fmtDate(campaign.startDate)}부터 6개 항목으로 판정합니다.</p>
+        </section>
+      ) : (
+        <HealthChecks health={health} />
+      )}
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-line bg-card p-5">

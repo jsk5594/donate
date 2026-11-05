@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AiEngineBadge } from "@/components/AiEngineBadge";
-import { HealthBadge, StatusBadge } from "@/components/HealthBadge";
+import { ScoreBadge, StatusBadge } from "@/components/HealthBadge";
 import { getPublishedReport } from "@/lib/ai/report-writer";
 import { fmtDate, won } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
@@ -47,7 +47,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </nav>
       <header className="border-b border-line pb-4">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-          <HealthBadge level={detail.health.overall} />
+          <ScoreBadge score={detail.health.score} level={detail.health.overall} />
           <span>게시 {fmtDate(report.publishedAt)}</span>
           <span>·</span>
           <span>{campaign.organizer}</span>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HealthBadge, StatusBadge } from "@/components/HealthBadge";
+import { ScoreBadge, StatusBadge } from "@/components/HealthBadge";
 import { publishDateOf, PUBLISH_DELAY_DAYS } from "@/lib/ai/report-writer";
 import { fmtDate, won } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
@@ -29,7 +29,7 @@ export default async function ReportsPage() {
           {published.map((s) => (
             <li key={s.campaign.id}>
               <Link href={`/reports/${s.campaign.id}`} className="flex flex-wrap items-center gap-3 px-5 py-4 hover:bg-[#F7F8FA]">
-                <HealthBadge level={s.health.overall} />
+                <ScoreBadge score={s.health.score} level={s.health.overall} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-semibold">{s.campaign.title} 기부금 결산 공개보고서</span>
                   <span className="block text-xs text-muted">
