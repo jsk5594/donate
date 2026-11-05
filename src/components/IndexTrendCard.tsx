@@ -191,28 +191,30 @@ export function IndexTrendCard({ trend }: { trend: IndexTrend }) {
           </div>
         )}
 
-        {/* 표 보기(화면낭독기) */}
-        <table className="sr-only">
-          <caption>기부투명도지수 추이</caption>
-          <thead>
-            <tr>
-              <th>기간</th>
-              {series.map((s) => (
-                <th key={s.id}>{s.name}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {points.map((p, i) => (
-              <tr key={p.key}>
-                <th>{p.label}</th>
+        {/* 표 보기(화면낭독기). 표는 높이 제한을 무시하므로 sr-only는 감싸는 div에 줌 */}
+        <div className="sr-only">
+          <table>
+            <caption>기부투명도지수 추이</caption>
+            <thead>
+              <tr>
+                <th>기간</th>
                 {series.map((s) => (
-                  <td key={s.id}>{s.values[i] ?? "—"}</td>
+                  <th key={s.id}>{s.name}</th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {points.map((p, i) => (
+                <tr key={p.key}>
+                  <th>{p.label}</th>
+                  {series.map((s) => (
+                    <td key={s.id}>{s.values[i] ?? "—"}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       <p className="border-t border-line px-5 py-2 text-[11px] text-muted">
         종합은 그 시점에 진행 중이던 완료 모집건 지수를 기부받은 돈으로 가중 평균한 값입니다. 공개 이력은 마지막 공개일만 있어 그 이전은 주기대로 공개한 것으로 봅니다.
