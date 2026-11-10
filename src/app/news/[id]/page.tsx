@@ -16,10 +16,12 @@ export default async function DemoNewsPage({ params }: { params: Promise<{ id: s
       <nav className="text-xs text-muted" aria-label="경로">
         <Link href="/" className="hover:text-primary">홈</Link> › 최신 기부 뉴스
       </nav>
-      <p className="rounded-lg bg-warn-bg px-4 py-2.5 text-sm font-semibold text-warn">가상 데이터입니다. 화면 확인용으로 만든 기사이며 실제 보도가 아닙니다.</p>
       <header>
         <h1 className="text-2xl font-bold tracking-tight">{article.title}</h1>
-        <p className="mt-2 text-sm text-muted">{article.source} · {fmtDateTime(article.publishedAt)}</p>
+        <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
+          <span className="rounded-full bg-warn-bg px-2 py-0.5 text-[11px] font-semibold text-warn">가상 뉴스</span>
+          <span>{article.source} · {fmtDateTime(article.publishedAt)}</span>
+        </p>
       </header>
       {/* eslint-disable-next-line @next/next/no-img-element -- public 폴더의 SVG */}
       <img src={article.thumbnail} alt="" className="aspect-[16/9] w-full rounded-xl object-cover" />

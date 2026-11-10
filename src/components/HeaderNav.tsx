@@ -7,10 +7,10 @@ import { usePathname } from "next/navigation";
 const NAV = [
   { href: "/", label: "홈", match: [] },
   { href: "/status", label: "기부 현황", match: ["/status", "/campaigns", "/categories"] },
-  { href: "/organizations", label: "주관기관 감사", match: ["/organizations"] },
-  { href: "/rules", label: "운영 세칙", match: ["/rules"] },
+  { href: "/organizations", label: "AI 점검", match: ["/organizations", "/ai-check"] },
   { href: "/reports", label: "기부 보고서", match: ["/reports"] },
   { href: "/donations", label: "기부내역", match: ["/donations"] },
+  { href: "/rules", label: "운영 세칙", match: ["/rules"] },
 ];
 
 export function HeaderNav() {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HealthBadge } from "./HealthBadge";
 import { TransparencyIndex } from "./TransparencyIndex";
+import { CHECK_COUNT } from "@/lib/rules";
 import type { CampaignHealth } from "@/lib/types";
 
 export function HealthChecks({ health }: { health: CampaignHealth }) {
@@ -9,7 +10,7 @@ export function HealthChecks({ health }: { health: CampaignHealth }) {
       <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line px-5 py-4">
         <div>
           <h2 className="text-base font-bold">운영 세칙 판정</h2>
-          <p className="mt-0.5 text-xs text-muted">6개 항목 점수의 합이 기부투명도지수입니다.</p>
+          <p className="mt-0.5 text-xs text-muted">{CHECK_COUNT}개 항목 점수의 합이 기부투명도지수입니다.</p>
         </div>
         {health.score !== null && (
           <div className="w-full sm:w-72">
@@ -27,7 +28,7 @@ export function HealthChecks({ health }: { health: CampaignHealth }) {
             <div className="min-w-0">
               <div className="text-sm font-semibold">{c.label}</div>
               <div className="text-xs text-muted">
-                {c.detail} <span className="text-[#8A98AA]">— {c.basis}</span>
+                {c.detail} <span className="text-[#8A98AA]">(근거: {c.basis})</span>
               </div>
             </div>
             <div className="text-right text-sm">

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { MyDonations } from "./MyDonations";
 import { DONOR_TYPES, type BoardPeriod, type HonorRow } from "@/lib/donor-board";
 import { fmtDate, won, wonShort } from "@/lib/format";
-import { getRepository, sampleDonorCodes } from "@/lib/repository";
+import { getRepository } from "@/lib/repository";
 import type { DonorType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +59,7 @@ export default async function DonationsPage({ searchParams }: { searchParams: Pr
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">기부내역</h1>
-        <p className="mt-1 text-sm text-muted">기부자 한 분 한 분이 만든 변화를 모았습니다. 이름은 모두 가명으로 표시됩니다.</p>
+        <p className="mt-1 text-sm text-muted">기부자들이 함께 만든 결과입니다. 이름은 가명으로 표시합니다.</p>
       </header>
 
       <section className="rounded-2xl bg-[#15202B] px-6 py-6 text-white md:px-8">
@@ -87,14 +87,14 @@ export default async function DonationsPage({ searchParams }: { searchParams: Pr
           <h2 id="my-donations" className="text-lg font-bold">나의 기부내역</h2>
           <p className="text-sm text-muted">기부코드를 입력하면 내 기부가 어디까지 닿았는지 볼 수 있습니다. 이름·연락처는 조회에 쓰이지 않습니다.</p>
         </div>
-        <MyDonations samples={sampleDonorCodes()} initialCode={code} initialResult={initialResult ?? undefined} />
+        <MyDonations initialCode={code} initialResult={initialResult ?? undefined} />
       </section>
 
       <section aria-labelledby="honor" className="rounded-xl border border-line bg-card">
         <header className="flex flex-col gap-3 border-b border-line px-5 py-4">
           <div>
             <h2 id="honor" className="text-lg font-bold">우수기부자</h2>
-            <p className="text-sm text-muted">구분·항목·기간별로 가장 큰 나눔을 실천한 분들입니다.</p>
+            <p className="text-sm text-muted">구분·항목·기간별 기부액 순위입니다.</p>
           </div>
           <nav aria-label="기부자 구분" className="flex gap-1">
             {DONOR_TYPES.map((t) => (

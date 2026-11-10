@@ -24,7 +24,7 @@ export default async function RulePostPage({ params }: { params: Promise<{ slug:
         <div className="text-xs font-semibold text-primary">{post.category}</div>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">{post.title}</h1>
         <p className="mt-2 text-sm text-muted">{post.summary}</p>
-        <div className="mt-2 text-xs text-muted">게시 {fmtDate(post.publishedAt)} · 기부CCTV 운영사무국</div>
+        <div className="mt-2 text-xs text-muted">게시 {fmtDate(post.publishedAt)} · 기부 돋보기 운영사무국</div>
       </header>
       <div className="flex flex-col gap-4 text-[15px] leading-relaxed">
         {post.body.map((para, i) => (

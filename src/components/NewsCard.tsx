@@ -4,12 +4,13 @@ import { fmtDateTime } from "@/lib/format";
 import { getDonationNews, type NewsItem } from "@/lib/news";
 
 /** 높이는 옆의 지수 추이 카드에 맞춤(absolute) */
-function Frame({ children, credit }: { children: ReactNode; credit?: string }) {
+function Frame({ children, credit, mock }: { children: ReactNode; credit?: string; mock?: boolean }) {
   return (
     <div className="relative min-h-[390px] xl:min-h-0">
       <section className="flex h-full flex-col rounded-xl border border-line bg-card xl:absolute xl:inset-0">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-5">
           <h2 className="text-base font-bold">최신 기부 뉴스</h2>
+          {mock && <span className="rounded-full bg-warn-bg px-2 py-0.5 text-[11px] font-semibold text-warn">가상 뉴스</span>}
           {credit && <span className="ml-auto text-xs text-muted">{credit}</span>}
         </header>
         {children}
@@ -63,7 +64,7 @@ async function NewsList() {
   if (news.items.length === 0) return <Frame><Notice>표시할 기부 뉴스가 없습니다.</Notice></Frame>;
 
   return (
-    <Frame credit={news.status === "demo" ? "가상 데이터 · 실제 기사가 아닙니다" : "네이버 뉴스 검색 제공"}>
+    <Frame credit={news.status === "demo" ? undefined : "네이버 뉴스 검색 제공"} mock={news.status === "demo"}>
       <ul className="flex min-h-0 flex-1 flex-col divide-y divide-line">
         {news.items.map((n) => (
           <li key={n.link} className="min-h-0 flex-1">

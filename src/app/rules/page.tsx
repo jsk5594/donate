@@ -17,15 +17,16 @@ export default function RulesPage() {
       <header>
         <h1 className="text-2xl font-bold tracking-tight">기부금 운영 세칙</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">
-          국내 법령(기부금품의 모집ㆍ사용 및 기부문화 활성화에 관한 법률)과 공익법인회계기준을 1차 근거로 하고, 국내 기준이 정하지 않은 운영비 상한·사업비 비중은 미국 BBB Wise Giving Alliance
-          기준을 참고해 정했습니다. 모든 모집건은 이 세칙으로 판정됩니다.
+          기부금품법과 공익법인회계기준을 따릅니다. 법령에 없는 운영비 상한과 사업비 비중은 미국 BBB Wise Giving Alliance 기준을 참고했습니다. 재해구호법, 고향사랑기부금법 등 다른 법률로
+          모집한 기부금은 같은 비율을 세칙 기준으로 적용합니다(제2조의2).
         </p>
       </header>
 
-      <section className="grid gap-3 sm:grid-cols-3">
-        <Rule title="모금비용" value="≤ 15%" sub="법정 한도(10억 이하 구간) · 제2장" />
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Rule title="모금비용" value="≤ 15%" sub="기부금품법 법정 한도(10억 이하 구간) · 제2장" />
         <Rule title="운영비" value="≤ 10%" sub="세칙 상한(주의 8%) · 제6장" />
         <Rule title="사업수행비용" value="≥ 65%" sub="총지출 대비 하한(권장 75%) · 제5장" />
+        <Rule title="모집기간" value="≤ 1년" sub="1천만원 이상 사전등록 · 사용 2년 · 제9장" />
       </section>
 
       <section className="overflow-hidden rounded-xl border border-line bg-card">

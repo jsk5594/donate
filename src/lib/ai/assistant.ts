@@ -8,7 +8,7 @@
 import { fmtDate, pct, won, wonShort } from "../format";
 import { ORGANIZATIONS } from "../org-data";
 import { getRepository, type MyDonationsResult, type Overview } from "../repository";
-import { needsAttention, POLICY } from "../rules";
+import { CHECK_COUNT, fundraisingCapLabel, needsAttention, POLICY, STATUTE } from "../rules";
 import { stageOf, type CampaignSummary } from "../types";
 import { generate, type ChatTurn } from "./client";
 import { DEMO_ENGINE, type EngineInfo } from "./config";
@@ -52,7 +52,7 @@ interface Context {
 
 async function orgContext(org: (typeof ORGANIZATIONS)[number], overview: Overview) {
   const m = await computeOrgMetrics(org, overview.campaigns);
-  return { id: org.id, name: org.name, grade: gradeOf(m.indicatorScore), score: m.indicatorScore, avgProgram: m.avgProgram, latestAdmin: m.latestAdmin, overCap: m.fundraisingOverCapYears, maxDelay: m.maxDelay, issues: org.issues.map((i) => `${i.year} ${i.title}`) };
+  return { id: org.id, name: org.name, grade: gradeOf(m.indicatorScore), score: m.indicatorScore, avgProgram: m.avgProgram, latestAdmin: m.latestAdmin, overCap: m.fundraisingOverCapYears, capLabel: fundraisingCapLabel(m.basis), maxDelay: m.maxDelay, issues: org.issues.map((i) => `${i.year} ${i.title}`) };
 }
 
 async function buildContext(messages: ChatTurn[]): Promise<Context> {
@@ -76,7 +76,16 @@ function contextForPrompt(c: Context) {
       사업에쓰인돈: won(c.overview.totals.donated),
       확인필요모집건: c.overview.campaigns.filter(needsAttention).map((s) => `${s.campaign.title}(${s.health.overall}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")})`),
     },
-    운영세칙: { 운영비한도: "10%", 사업비최소: "65%(권장 75%)", 모금비용: "법정 한도(10억 이하 15%)", 모집종료후잔액: "30% 이하 권장", 공개주기: "14일" },
+    운영세칙: {
+      판정항목수: CHECK_COUNT,
+      운영비한도: "10%",
+      사업비최소: "65%(권장 75%)",
+      모금비용: "기부금품법 모집건은 법정 한도(10억 이하 15%), 재해구호법·고향사랑기부금법·사회복지공동모금회법 모집건은 같은 비율을 세칙 준용 한도로 적용",
+      모집종료후잔액: "30% 이하 권장",
+      공개주기: "14일",
+      모집등록: `기부금품법 모집건만: 목표 1천만원 이상 사전등록(10억 이하 시·도, 초과 행정안전부), 모집기간 1년·사용기간 2년 이내, 목표 도달 시 즉시 중단`,
+      보고기한: `기부금품법 모집건만: 모집 종료 후 ${STATUTE.completionReportDays}일 내 완료보고, 사용 완료 후 ${STATUTE.usageReportDays}일 내 사용명세 보고(1억 초과 회계감사보고서)`,
+    },
     ...(c.donorCode
       ? {
           나의기부내역: c.myDonations
@@ -93,6 +102,7 @@ function contextForPrompt(c: Context) {
       제목: s.campaign.title,
       상태: stageOf(s.campaign.status),
       주관기관: s.campaign.organizer,
+      근거법률: s.campaign.legalBasis,
       기부받은돈: won(s.sheet.inflow.total),
       사업비: `${won(s.sheet.outflow.program)} (${pct(s.sheet.outflow.program / (s.sheet.inflow.total || 1))})`,
       운영비: pct(s.sheet.outflow.admin / (s.sheet.inflow.total || 1)),
@@ -105,12 +115,13 @@ function contextForPrompt(c: Context) {
   };
 }
 
-const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부CCTV'의 기부 도우미입니다.
+const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부 돋보기'의 기부 도우미입니다.
 - 오직 [조회 데이터]에 있는 내용으로만 답합니다. 없는 정보는 "확인되지 않습니다"라고 말하고 어디서 볼 수 있는지 안내하세요.
 - 수치는 데이터 값을 그대로 인용하세요. 새로 계산하지 마세요.
 - 기부내역 질문인데 기부코드가 없으면, 기부코드(D-XXXXXXXX, 기부 완료 문자에 포함)를 알려달라고 요청하세요.
 - 실명·연락처를 묻거나 추측하지 마세요. 이름은 가명(김*성) 그대로만 씁니다.
-- 기관을 믿어도 되는지 묻는 질문엔 지표 근거로 답하되, 최종 판단은 기부자 몫임을 존중하고 '주관기관 감사' 페이지를 안내하세요.
+- 기관을 믿어도 되는지 묻는 질문엔 지표 근거로 답하되, 최종 판단은 기부자 몫임을 존중하고 'AI 점검 > AI 기관 살펴보기' 페이지를 안내하세요.
+- 모금비용 한도를 말할 때는 모집건의 근거법률을 확인하세요. 기부금품법이 아닌 모집건(재해구호법·고향사랑기부금법 등)에는 '법정 한도 위반'이라고 하지 말고 '세칙 기준 초과'라고 하세요.
 - 존댓말, 3~6문장, 필요하면 짧은 목록.`;
 
 export async function answer(messages: ChatTurn[]): Promise<ChatReply> {
@@ -132,7 +143,7 @@ function linksFor(c: Context): ChatLink[] {
   const out: ChatLink[] = [];
   if (c.myDonations) out.push({ label: `${c.myDonations.donorCode} 기부내역 자세히`, href: `/donations?code=${c.myDonations.donorCode}` });
   for (const s of c.campaigns.slice(0, 3)) out.push({ label: s.campaign.title, href: `/campaigns/${s.campaign.id}` });
-  for (const o of c.orgs.slice(0, 2)) out.push({ label: `${o.name} 감사 보기`, href: `/organizations/${o.id}` });
+  for (const o of c.orgs.slice(0, 2)) out.push({ label: `${o.name} 살펴보기`, href: `/organizations/${o.id}` });
   return out;
 }
 
@@ -145,9 +156,9 @@ function demoAnswer(q: string, c: Context): string {
     return [
       `${o.name}의 최근 5년 공시 지표를 보면 '${o.grade}' 수준입니다(지표 점수 ${o.score}점).`,
       `- 평균 사업비 비율 ${pct(o.avgProgram)}, 최근 운영비 ${pct(o.latestAdmin)}`,
-      `- 모금비용 법정 한도 초과 ${o.overCap}개 연도, 결산 공시 최장 지연 ${o.maxDelay}일`,
+      `- 모금비용 ${o.capLabel} 초과 ${o.overCap}개 연도, 결산 공시 최장 지연 ${o.maxDelay}일`,
       o.issues.length ? `- 처분·지적: ${o.issues.join(" / ")}` : `- 처분·지적 이력은 없습니다.`,
-      `자세한 AI 감사의견은 아래 링크에서 확인하세요.`,
+      `자세한 AI 점검 의견은 아래 링크에서 확인하세요.`,
     ].join("\n");
   }
 
@@ -187,10 +198,11 @@ function demoAnswer(q: string, c: Context): string {
 
   if (/운영비|모금비|기준|세칙|몇\s*%|한도/.test(q)) {
     return [
-      "기부CCTV는 다음 기준으로 모집건을 판정합니다.",
+      "기부 돋보기는 다음 기준으로 모집건을 판정합니다.",
       `- 운영비(일반관리비용): 수입의 ${pct(POLICY.adminRatioBad, 0)} 이하 (${pct(POLICY.adminRatioWarn, 0)} 초과 시 주의)`,
       `- 사업비: 총지출의 ${pct(POLICY.programShareMin, 0)} 이상, 권장 ${pct(POLICY.programShareGood, 0)}`,
-      "- 모금비용: 기부금품법 시행령 한도(10억 이하 모금 시 15%)",
+      "- 모금비용: 기부금품법 시행령 한도(10억 이하 모금 시 15%). 재해구호법·고향사랑기부금법 등 다른 법률 모집건은 같은 비율을 세칙으로 준용",
+      "- 기부금품법 모집건: 목표 1천만원 이상 사전등록, 모집기간 1년 이내, 모집 종료 후 30일·사용 완료 후 60일 이내 보고",
       `- 모집 종료 후 미집행 잔액 ${pct(POLICY.balanceAfterEndWarn, 0)} 이하 권장`,
     ].join("\n");
   }

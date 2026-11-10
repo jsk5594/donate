@@ -20,7 +20,8 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
   return (
     <div className="flex flex-col gap-6">
       <nav className="text-xs text-muted" aria-label="경로">
-        <Link href="/organizations" className="hover:text-primary">주관기관 감사</Link> <span aria-hidden="true">›</span> {org.name}
+        <Link href="/organizations" className="hover:text-primary">AI 점검</Link> <span aria-hidden="true">›</span>{" "}
+        <Link href="/organizations" className="hover:text-primary">AI 기관 살펴보기</Link> <span aria-hidden="true">›</span> {org.name}
       </nav>
 
       <header>
@@ -35,7 +36,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
 
       <section className="rounded-xl border border-line bg-card p-5">
         <h2 className="text-base font-bold">AI가 읽은 데이터 ① 연도별 결산 공시</h2>
-        <p className="mt-1 text-xs text-muted">막대: 기부금 수입 대비 사용 비율 — 사업비 · 운영비 · 모금비용 · 이월 잔액(점선)</p>
+        <p className="mt-1 text-xs text-muted">막대는 기부금 수입 대비 사용 비율입니다. 사업비, 운영비, 모금비용, 이월 잔액(점선) 순입니다.</p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
@@ -104,7 +105,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
                   <li key={k} className="flex gap-2">
                     <span className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold ${i.severity === "중대" ? "bg-bad-bg text-bad" : "bg-warn-bg text-warn"}`}>{i.severity}</span>
                     <span>
-                      <span className="tnum">{i.year}</span> {i.title} <span className="text-xs text-muted">— {i.source}</span>
+                      <span className="tnum">{i.year}</span> {i.title} <span className="text-xs text-muted">({i.source})</span>
                     </span>
                   </li>
                 ))}
@@ -128,7 +129,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-muted">기부CCTV에 등록된 모집건이 없습니다.</p>
+              <p className="mt-3 text-sm text-muted">기부 돋보기에 등록된 모집건이 없습니다.</p>
             )}
           </div>
         </div>

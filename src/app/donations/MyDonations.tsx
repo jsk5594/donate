@@ -6,7 +6,7 @@ import { fmtDate, fmtDateTime, pct, won, wonShort } from "@/lib/format";
 import type { MyDonationsResult } from "@/lib/repository";
 
 /** initialCode/initialResult: 챗봇 등에서 /donations?code=D-XXXXXXXX 로 들어오면 서버에서 미리 조회한 결과 */
-export function MyDonations({ samples, initialCode, initialResult }: { samples: { code: string; alias: string; count: number }[]; initialCode?: string; initialResult?: MyDonationsResult | null }) {
+export function MyDonations({ initialCode, initialResult }: { initialCode?: string; initialResult?: MyDonationsResult | null }) {
   const [code, setCode] = useState(initialCode ?? "");
   const [result, setResult] = useState<MyDonationsResult | null>(initialResult ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -53,22 +53,7 @@ export function MyDonations({ samples, initialCode, initialResult }: { samples: 
             {busy ? "조회 중…" : "조회"}
           </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-          <span>데모용 코드:</span>
-          {samples.map((s) => (
-            <button
-              key={s.code}
-              type="button"
-              onClick={() => {
-                setCode(s.code);
-                lookup(s.code);
-              }}
-              className="rounded-full border border-line px-2.5 py-1 font-mono hover:bg-[#F3F5F8]"
-            >
-              {s.code} <span className="font-sans text-muted">({s.alias} · {s.count}건)</span>
-            </button>
-          ))}
-        </div>
+        <p className="text-xs text-muted">기부코드는 기부 완료 안내 문자에 있습니다. 이름이나 연락처 없이 코드만으로 조회합니다.</p>
         {error && <p className="rounded-lg bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
       </form>
 

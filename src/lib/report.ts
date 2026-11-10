@@ -1,6 +1,6 @@
 import { fmtDate, won, pct } from "./format";
 import type { CampaignDetail } from "./repository";
-import { goalRate } from "./rules";
+import { goalRate, isStatutory } from "./rules";
 
 /**
  * 결산 보고서의 "사실 블록" — 원장에서 계산한 수치만 담습니다.
@@ -38,7 +38,7 @@ export function buildSettlementFacts(detail: CampaignDetail): SettlementFacts {
 
   const lines = [
     `□ 모집건 개요`,
-    ` ○ 모집기관: ${campaign.organizer} / 모집등록번호: ${campaign.registrationNo}`,
+    ` ○ 모집기관: ${campaign.organizer} / 근거 법률: ${campaign.legalBasis} / ${isStatutory(campaign) ? "모집등록번호" : "관리번호"}: ${campaign.registrationNo}`,
     ` ○ 모집목적: ${campaign.purpose}`,
     ` ○ 모집기간: ${fmtDate(campaign.startDate)} ~ ${fmtDate(campaign.endDate)} / 집행 완료: ${fmtDate(end)} (총 ${durationDays}일)`,
     `□ 모집 결과`,
@@ -54,7 +54,7 @@ export function buildSettlementFacts(detail: CampaignDetail): SettlementFacts {
     `□ 잔액`,
     ` ○ 미집행 잔액 ${won(sheet.outflow.balance)} (${Math.abs(sheet.outflow.balance) < 1 ? "전액 집행" : "잔액 있음"})`,
     `□ 운영 세칙 판정`,
-    ...health.checks.map((c) => ` ○ [${c.level}] ${c.label}: ${c.value} (기준 ${c.threshold}) — ${c.detail}`),
+    ...health.checks.map((c) => ` ○ [${c.level}] ${c.label}: ${c.value} (기준 ${c.threshold}). ${c.detail}`),
   ];
 
   const allowed = new Set<string>();

@@ -4,6 +4,7 @@ import { ScoreBadge } from "@/components/HealthBadge";
 import { KpiHero, type YearSummary } from "@/components/KpiHero";
 import { aggregateIndex, goalRate, levelOfScore, needsAttention } from "@/lib/rules";
 import { LiveDonationTicker } from "@/components/LiveDonationTicker";
+import { FEATURED_DONATIONS, FEATURED_EVERY, mixFeatured } from "@/lib/featured-donations";
 import { getRepository } from "@/lib/repository";
 import { buildIndexTrend } from "@/lib/index-trend";
 import { IndexTrendCard } from "@/components/IndexTrendCard";
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const repo = getRepository();
-  const [overview, live] = await Promise.all([repo.getOverview(), repo.getLiveDonations(undefined, 12)]);
+  const [overview, live] = await Promise.all([repo.getOverview(), repo.getLiveDonations(undefined, FEATURED_DONATIONS.length * FEATURED_EVERY)]);
   const titles = Object.fromEntries(overview.campaigns.map((s) => [s.campaign.id, s.campaign.title]));
   const yearSummary = summarizeYear(overview, new Date().getFullYear());
   // 5개년 기부 1만여 건을 모두 브라우저로 보내지 않도록, 유형별 최근 200건 + 전체 건수·최고액만 전달
@@ -71,13 +72,13 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-6">
       {/* 뉴스 자막처럼 최근 기부가 흐르는 띠 */}
-      <LiveDonationTicker initial={live} />
+      <LiveDonationTicker initial={mixFeatured(live)} />
 
       {/* 상단 카드의 아래 화살표로 펼치는 전체 대차대조표 */}
       <KpiHero y={yearSummary}>
         <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="text-lg font-bold">전체 기부금 대차대조표</h2>
-          <span className="text-sm text-muted">왼쪽은 기부받은 돈, 오른쪽은 그 돈이 간 곳 — 양쪽은 항상 같아야 합니다. (전체 기간 누적)</span>
+          <span className="text-sm text-muted">왼쪽은 기부받은 돈, 오른쪽은 그 돈이 쓰인 곳입니다. 양쪽 합계는 늘 같습니다. (전체 기간)</span>
         </div>
         <BalanceExplorer sheet={overview.sheet} donations={explorer.donations} donorStats={explorer.stats} expenses={overview.expenses} campaignTitles={titles} height={260} chartMaxWidth={800} />
       </KpiHero>
@@ -98,7 +99,7 @@ export default async function HomePage() {
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-5">
           <h2 className="text-base font-bold">지금 확인이 필요한 모집건</h2>
           <Link href="/status?tab=risk" className="ml-auto rounded-md px-2 py-1 text-sm font-semibold text-primary hover:bg-primary-soft">
-            기부 위기 감지 →
+            전체 보기 →
           </Link>
         </header>
         <p className="shrink-0 border-b border-line bg-[#F7F8FA] px-5 py-2 text-xs text-muted">집행이 끝나지 않은 모집건 중 기부투명도지수 80점 미만</p>
@@ -127,7 +128,7 @@ export default async function HomePage() {
       </div>
       </div>
 
-      {/* 완료 모집건 지수 추이(월별/연별 × 종합/기부항목별) · 최신 기부 뉴스 */}
+      {/* 완료 모집건 지수 추이(월별/연별 × 종합/기부항목별) · 최신 기부 뉴스(키가 없으면 '가상 뉴스' 표시) */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <IndexTrendCard trend={buildIndexTrend(overview)} />
         <NewsCard />

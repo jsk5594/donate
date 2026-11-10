@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { ScoreBadge, StatusBadge } from "@/components/HealthBadge";
 import { fmtDate, pct, wonShort } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
-import { aggregateIndex } from "@/lib/rules";
+import { aggregateIndex, CHECK_COUNT } from "@/lib/rules";
 import { stageOf, type CampaignSummary, type Stage } from "@/lib/types";
 
 type Dir = "asc" | "desc";
@@ -35,7 +35,7 @@ function levelStyle(s: CampaignSummary, key: string) {
 
 const compare = (a: number | string, b: number | string) => (typeof a === "string" || typeof b === "string" ? String(a).localeCompare(String(b), "ko") : a - b);
 
-/** 기부 현황 페이지의 '기부 위기 감지' 탭 — 위반·주의 모집건 표 (옅은 노랑·주황·빨강 계열) */
+/** 기부 현황 페이지의 '확인 필요 모집건' 탭 — 위반·주의 모집건 표 (옅은 노랑·주황·빨강 계열) */
 export async function RiskView({ params }: { params: { y?: string | string[]; s?: string | string[]; sort?: string | string[]; dir?: string | string[] } }) {
   const overview = await getRepository().getOverview();
   const upcomingCount = overview.campaigns.filter((s) => s.campaign.status === "예정").length;
@@ -105,9 +105,9 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
         </svg>
         <div className="min-w-0">
           <p className="text-lg font-bold text-risk-ink">
-            위기 신호 {count("위반") + count("주의")}건 감지 <span className="text-sm font-semibold">· 위반 {count("위반")}건 · 주의 {count("주의")}건</span>
+            확인이 필요한 모집건 {count("위반") + count("주의")}건 <span className="text-sm font-semibold">· 위반 {count("위반")}건 · 주의 {count("주의")}건</span>
           </p>
-          <p className="mt-0.5 text-sm text-foreground/80">모든 모집건을 운영 세칙 6개 항목으로 매일 자동 점검합니다. 6개 항목 점수를 합한 기부투명도지수(0~100)로 보여주며, 이 화면에는 위반·주의 모집건만 표시합니다.{upcomingCount > 0 && ` 진행 예정 ${upcomingCount}건은 모집 시작 후 판정합니다.`}</p>
+          <p className="mt-0.5 text-sm text-foreground/80">모든 모집건을 운영 세칙 {CHECK_COUNT}개 항목으로 매일 점검합니다. 이 화면에는 위반과 주의 모집건만 보여 줍니다.{upcomingCount > 0 && ` 진행 예정 ${upcomingCount}건은 모집 시작 후 판정합니다.`}</p>
         </div>
       </div>
 

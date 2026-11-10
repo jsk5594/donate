@@ -57,7 +57,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </header>
 
       <div className={`rounded-lg px-4 py-2.5 text-xs ${report.verification.passed ? "bg-ok-bg text-ok" : "bg-warn-bg text-warn"}`}>
-        <span className="font-bold">{report.verification.passed ? "원장 대조 검증 통과" : "검증 안내"}</span> — {report.verification.note}
+        <span className="font-bold">{report.verification.passed ? "원장 대조 검증 통과" : "검증 안내"}</span>: {report.verification.note}
       </div>
 
       <pre className="whitespace-pre-wrap rounded-xl border border-line bg-card p-6 font-sans text-[14px] leading-relaxed">{report.body}</pre>

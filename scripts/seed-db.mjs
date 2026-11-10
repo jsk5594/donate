@@ -1,6 +1,6 @@
 /**
  * 가상 데이터(5개년)를 SQLite DB 파일로 저장합니다.
- *   npm run db:seed   →  data/donation-cctv.db
+ *   npm run db:seed   →  data/donation-dotbogi.db
  * Node 22.13+ 내장 node:sqlite 사용(추가 패키지 없음). 생성기는 src/lib/mock-data.ts(시드 고정).
  */
 import { mkdirSync, rmSync } from "node:fs";
@@ -8,7 +8,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { getDataset, REFERENCE_NOW } from "../src/lib/mock-data.ts";
 
-const file = path.join(process.cwd(), "data", "donation-cctv.db");
+const file = path.join(process.cwd(), "data", "donation-dotbogi.db");
 mkdirSync(path.dirname(file), { recursive: true });
 rmSync(file, { force: true });
 
@@ -23,6 +23,7 @@ CREATE TABLE campaigns (
   id TEXT PRIMARY KEY,
   category_id TEXT NOT NULL REFERENCES categories(id),
   title TEXT NOT NULL, region TEXT NOT NULL, organizer TEXT NOT NULL,
+  legal_basis TEXT NOT NULL CHECK (legal_basis IN ('기부금품법','재해구호법','고향사랑기부금법','사회복지공동모금회법')),
   registration_no TEXT NOT NULL, purpose TEXT NOT NULL,
   goal INTEGER NOT NULL, start_date TEXT NOT NULL, end_date TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('예정','모집중','집행중','종료','완료')),
@@ -57,8 +58,8 @@ const insert = (sql, rows, map) => {
 db.exec("BEGIN");
 insert("INSERT INTO meta VALUES (?, ?)", [["reference_now", REFERENCE_NOW.toISOString()], ["generated_at", new Date().toISOString()], ["source", "src/lib/mock-data.ts (seeded)"]], (r) => r);
 insert("INSERT INTO categories VALUES (?, ?, ?)", ds.categories, (c) => [c.id, c.name, c.description]);
-insert("INSERT INTO campaigns VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ds.campaigns, (c) => [
-  c.id, c.categoryId, c.title, c.region, c.organizer, c.registrationNo, c.purpose, c.goal, c.startDate, c.endDate, c.status, c.disclosureCycleDays, c.lastDisclosedAt, c.completedAt ?? null,
+insert("INSERT INTO campaigns VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ds.campaigns, (c) => [
+  c.id, c.categoryId, c.title, c.region, c.organizer, c.legalBasis, c.registrationNo, c.purpose, c.goal, c.startDate, c.endDate, c.status, c.disclosureCycleDays, c.lastDisclosedAt, c.completedAt ?? null,
 ]);
 insert("INSERT INTO donations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", ds.donations, (d) => [
   d.id, d.campaignId, d.donorName, d.donorType, d.donorPhoneLast4 ?? null, d.amount, d.donatedAt, d.method, d.message ?? null,

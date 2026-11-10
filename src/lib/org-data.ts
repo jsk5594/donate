@@ -3,9 +3,11 @@
  * - 연도별 결산 공시(수입·사업수행비용·일반관리비용·모금비용·이월잔액), 공시 지연일, 외부감사 의견, 행정처분·지적사항.
  * - 모든 기관명·수치는 가상입니다. 실존 기관명(예: 대한적십자사)에 가상 수치를 붙이면 명예훼손 소지가 있으므로,
  *   실제 기관을 다룰 때는 국세청 공익법인 결산서류 공시·행정안전부 기부통합관리시스템 등 실데이터로만 연결하세요.
- * - 공시는 기관 전체 결산이므로, 그해 수입·비용 유형별 금액이 기부CCTV 원장의 해당 기관 합계보다 작을 수 없습니다.
+ * - 공시는 기관 전체 결산이므로, 그해 수입·비용 유형별 금액이 기부 돋보기 원장의 해당 기관 합계보다 작을 수 없습니다.
  * - DB 연결 시 organizations / organization_annual_reports / organization_issues 테이블로 옮깁니다.
  */
+
+import type { LegalBasis } from "./types";
 
 export type AuditOpinion = "적정" | "한정" | "부적정" | "의견거절" | "미실시";
 
@@ -25,7 +27,7 @@ export interface OrgIssue {
   year: number;
   severity: "경미" | "중대";
   title: string;
-  source: string; // 출처(가상)
+  source: string; // 출처
 }
 
 export interface Organization {
@@ -35,6 +37,7 @@ export interface Organization {
   founded: number;
   field: string;
   designated: boolean; // 지정기부금단체(공익법인) 지정 여부
+  legalBasis?: LegalBasis; // 주된 모금의 근거 법률(세칙 제2조의2) — 없으면 기부금품법
   years: OrgYear[];
   issues: OrgIssue[];
 }
@@ -56,7 +59,7 @@ function years(rows: Row[]): OrgYear[] {
 export const ORGANIZATIONS: Organization[] = [
   {
     id: "warm-neighbor",
-    name: "따뜻한이웃복지회(가상)",
+    name: "따뜻한이웃복지회",
     legalType: "사단법인",
     founded: 2012,
     field: "독거노인·저소득층 생활 지원",
@@ -69,13 +72,13 @@ export const ORGANIZATIONS: Organization[] = [
       [2025, 2.3, 0.62, 0.13, 0.05, 400, 48, "한정"],
     ]),
     issues: [
-      { year: 2024, severity: "경미", title: "관할청 개선권고 — 일반관리비 비중 과다(11.5%)", source: "관할청 지도점검 결과(가상)" },
-      { year: 2025, severity: "경미", title: "결산서류 공시 기한 48일 경과", source: "공익법인 공시 이력(가상)" },
+      { year: 2024, severity: "경미", title: "관할청 개선권고 — 일반관리비 비중 과다(11.5%)", source: "관할청 지도점검 결과" },
+      { year: 2025, severity: "경미", title: "결산서류 공시 기한 48일 경과", source: "공익법인 공시 이력" },
     ],
   },
   {
     id: "blue-sea",
-    name: "푸른바다시민연대(가상)",
+    name: "푸른바다시민연대",
     legalType: "비영리민간단체",
     founded: 2016,
     field: "해양쓰레기 수거·연안 정화",
@@ -88,14 +91,15 @@ export const ORGANIZATIONS: Organization[] = [
       [2025, 1.3, 0.58, 0.06, 0.17, 1600, 20, "한정"],
     ]),
     issues: [
-      { year: 2023, severity: "중대", title: "모집비용 법정 한도(15%) 초과 — 시정명령", source: "기부금품 모집 관할청 처분(가상)" },
-      { year: 2024, severity: "중대", title: "모집비용 한도 초과 재발(18%) — 과태료 부과", source: "기부금품 모집 관할청 처분(가상)" },
+      { year: 2023, severity: "중대", title: "모집비용 법정 한도(15%) 초과 — 시정명령", source: "기부금품 모집 관할청 처분" },
+      { year: 2024, severity: "중대", title: "모집비용 한도 초과 재발(18%) — 과태료 부과", source: "기부금품 모집 관할청 처분" },
     ],
   },
   {
     id: "gangwon-relief",
-    name: "강원도 재해구호기금(가상)",
+    name: "강원재해복구나눔재단",
     legalType: "재단법인",
+    legalBasis: "재해구호법",
     founded: 2005,
     field: "재난 이재민 구호·주거 지원",
     designated: true,
@@ -106,11 +110,11 @@ export const ORGANIZATIONS: Organization[] = [
       [2024, 5.2, 0.8, 0.04, 0.02, 760, 0, "적정"],
       [2025, 7.0, 0.52, 0.04, 0.02, 610, 5, "적정"],
     ]),
-    issues: [{ year: 2025, severity: "경미", title: "산불 모금 종료 후 미집행 잔액 42% 이월 — 집행계획 제출 요구", source: "관할청 사후관리(가상)" }],
+    issues: [{ year: 2025, severity: "경미", title: "산불 모금 종료 후 미집행 잔액 42% 이월 — 집행계획 제출 요구", source: "관할청 사후관리" }],
   },
   {
     id: "hankki",
-    name: "한끼나눔아동재단(가상)",
+    name: "한끼나눔아동재단",
     legalType: "재단법인",
     founded: 2010,
     field: "결식우려아동 급식 지원",
@@ -126,7 +130,7 @@ export const ORGANIZATIONS: Organization[] = [
   },
   {
     id: "baeum",
-    name: "배움다리교육재단(가상)",
+    name: "배움다리교육재단",
     legalType: "재단법인",
     founded: 2014,
     field: "농어촌 교육 격차 해소",
@@ -142,7 +146,7 @@ export const ORGANIZATIONS: Organization[] = [
   },
   {
     id: "gotjawal",
-    name: "곶자왈생명숲네트워크(가상)",
+    name: "곶자왈생명숲네트워크",
     legalType: "사단법인",
     founded: 2018,
     field: "제주 곶자왈 숲 복원",
@@ -158,7 +162,7 @@ export const ORGANIZATIONS: Organization[] = [
   },
   {
     id: "child-rehab",
-    name: "어린이재활나눔재단(가상)",
+    name: "어린이재활나눔재단",
     legalType: "재단법인",
     founded: 2015,
     field: "장애아동 재활·보조기기 지원",
@@ -170,12 +174,13 @@ export const ORGANIZATIONS: Organization[] = [
       [2024, 1.3, 0.81, 0.05, 0.05, 270, 0, "적정"],
       [2025, 1.2, 0.8, 0.05, 0.05, 260, 3, "적정"],
     ]),
-    issues: [{ year: 2022, severity: "경미", title: "기부금영수증 발급 오류(12건) — 자진 정정", source: "국세청 공시 정정 이력(가상)" }],
+    issues: [{ year: 2022, severity: "경미", title: "기부금영수증 발급 오류(12건) — 자진 정정", source: "국세청 공시 정정 이력" }],
   },
   {
     id: "gb-relief",
-    name: "경북재해구호협회(가상)",
+    name: "경북재난이웃돕기회",
     legalType: "사단법인",
+    legalBasis: "재해구호법",
     founded: 2008,
     field: "태풍·지진 피해 복구 지원",
     designated: true,

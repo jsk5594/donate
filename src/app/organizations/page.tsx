@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuditTabs } from "@/components/AuditTabs";
 import { TrustGradeBadge } from "@/components/TrustGradeBadge";
 import { computeOrgMetrics, gradeOf } from "@/lib/ai/org-audit";
 import { pct, wonShort } from "@/lib/format";
@@ -14,12 +15,12 @@ export default async function OrganizationsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">주관기관 AI 감사</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted">
-          기부를 맡기기 전에 기관의 지난 5년을 확인하세요. AI가 연도별 결산 공시, 외부감사 의견, 행정처분 이력, 현재 모집건 판정을 함께 읽고 추세·재발 여부·지표 간 연관까지 따져 감사의견을 냅니다.
+      <AuditTabs active="org" />
+      <div className="-mt-2">
+        <p className="max-w-3xl text-sm text-muted">
+          기부하기 전에 모집기관의 지난 5년을 확인하세요. 연도별 결산 공시, 외부감사 의견, 행정처분 이력, 현재 모집건 판정을 바탕으로 AI가 점검 의견을 냅니다.
         </p>
-      </header>
+      </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {rows.map(({ org, m }) => {
@@ -42,13 +43,13 @@ export default async function OrganizationsPage() {
               </dl>
               <div className="flex items-center justify-between text-xs text-muted">
                 <span>5년 모금 {wonShort(m.totalReceived)} · 현재 모집건 {m.currentCampaigns.length}개</span>
-                <span className="font-semibold text-primary">AI 감사의견 보기 →</span>
+                <span className="font-semibold text-primary">AI 점검 의견 보기 →</span>
               </div>
             </Link>
           );
         })}
       </div>
-      <p className="text-xs text-muted">등급은 지표 점수(80점 이상 신뢰 가능 · 60~79점 주의 필요 · 60점 미만 신중 검토)로 정하며, 기관 페이지에서 AI가 이력을 해석한 감사의견을 확인할 수 있습니다. 사업비는 수입 대비 비율입니다. 기관명·수치는 모두 가상입니다.</p>
+      <p className="text-xs text-muted">등급은 지표 점수로 정합니다. 80점 이상은 신뢰 가능, 60~79점은 주의 필요, 60점 미만은 추가 확인 권장입니다. 사업비는 수입 대비 비율입니다.</p>
     </div>
   );
 }

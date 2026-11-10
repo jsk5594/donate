@@ -5,7 +5,7 @@ import { AiEngineBadge } from "@/components/AiEngineBadge";
 import { TrustGradeBadge } from "@/components/TrustGradeBadge";
 import type { OrgAuditResult } from "@/lib/ai/org-audit";
 
-/** AI 감사의견 — 페이지는 먼저 그리고, 의견은 AI 응답을 받아 채움 */
+/** AI 점검 의견 — 페이지는 먼저 그리고, 의견은 AI 응답을 받아 채움 */
 export function OrgAuditPanel({ orgId }: { orgId: string }) {
   const [data, setData] = useState<OrgAuditResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export function OrgAuditPanel({ orgId }: { orgId: string }) {
     let alive = true;
     fetch(`/api/organizations/${orgId}/audit`)
       .then(async (r) => {
-        if (!r.ok) throw new Error("감사의견을 불러오지 못했습니다.");
+        if (!r.ok) throw new Error("점검 의견을 불러오지 못했습니다.");
         return (await r.json()) as OrgAuditResult;
       })
       .then((d) => alive && setData(d))
@@ -27,13 +27,13 @@ export function OrgAuditPanel({ orgId }: { orgId: string }) {
   return (
     <section className="rounded-xl border-2 border-primary/30 bg-card p-5" aria-busy={!data && !error}>
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-bold">AI 감사의견</h2>
+        <h2 className="text-lg font-bold">AI 점검 의견</h2>
         {data && <AiEngineBadge engine={data.engine} />}
       </div>
 
       {!data && !error && (
         <div className="mt-4 flex flex-col gap-2" aria-live="polite">
-          <p className="text-sm text-muted">AI가 5년치 결산 공시·감사의견·처분 이력을 읽고 있습니다…</p>
+          <p className="text-sm text-muted">5년 결산 공시와 외부감사 의견, 처분 이력을 검토하고 있습니다.</p>
           <div className="h-4 w-2/3 animate-pulse rounded bg-[#EEF1F5]" />
           <div className="h-4 w-full animate-pulse rounded bg-[#EEF1F5]" />
           <div className="h-4 w-5/6 animate-pulse rounded bg-[#EEF1F5]" />
@@ -75,7 +75,7 @@ export function OrgAuditPanel({ orgId }: { orgId: string }) {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-sm text-muted">특별한 위험 신호가 없습니다.</p>
+                <p className="mt-2 text-sm text-muted">특별히 살펴볼 점이 없습니다.</p>
               )}
             </div>
           </div>
@@ -85,7 +85,7 @@ export function OrgAuditPanel({ orgId }: { orgId: string }) {
             {data.opinion.advice}
           </div>
           {data.fallbackReason && <p className="text-xs text-warn">{data.fallbackReason}</p>}
-          <p className="text-xs text-muted">AI 의견은 아래 공시 데이터만 근거로 작성되며, 최종 판단은 기부자에게 있습니다.</p>
+          <p className="text-xs text-muted">점검 의견은 아래 공시 자료를 근거로 합니다. 기부 여부는 기부자가 판단합니다.</p>
         </div>
       )}
     </section>

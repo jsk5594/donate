@@ -21,7 +21,7 @@ export default async function DonorMessagesPage({ searchParams }: { searchParams
 
       <header>
         <h1 className="text-2xl font-bold tracking-tight">기부자들이 남긴 말</h1>
-        <p className="mt-1 text-sm text-muted">기부와 함께 전해 주신 메시지 {wall.total.toLocaleString("ko-KR")}건 가운데, 마음을 담아 길게 써 주신 글을 모았습니다. 이름은 가명으로 표시됩니다.</p>
+        <p className="mt-1 text-sm text-muted">기부와 함께 남긴 메시지 {wall.total.toLocaleString("ko-KR")}건 중 긴 글을 모았습니다. 이름은 가명으로 표시합니다.</p>
       </header>
 
       <nav aria-label="항목" className="flex flex-wrap gap-1">

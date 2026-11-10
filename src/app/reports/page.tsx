@@ -36,7 +36,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       <header>
         <h1 className="text-2xl font-bold tracking-tight">기부 보고서</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">
-          모집건의 집행이 끝나면 AI가 원장 수치로 결산 보고서를 작성하고, 본문의 모든 금액·비율을 원장과 대조하는 검증을 통과하면 {PUBLISH_DELAY_DAYS}일 뒤 자동으로 게시합니다. 사람이 쓰거나 고치지 않습니다.
+          집행이 끝난 모집건의 결산 보고서입니다. 보고서의 금액과 비율은 모두 원장과 대조해 확인한 뒤 집행 완료 {PUBLISH_DELAY_DAYS}일 뒤에 게시합니다.
         </p>
       </header>
 
@@ -89,7 +89,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       {pending.length > 0 && <section className="rounded-xl border border-line bg-card">
         <div className="border-b border-line px-5 py-3">
           <h2 className="text-sm font-bold">자동 생성 대기 · {pending.length}건</h2>
-          <p className="mt-0.5 text-xs text-muted">집행이 끝나지 않은 모집건은 집행이 완료되는 시점에 결산 보고서가 자동 생성됩니다.</p>
+          <p className="mt-0.5 text-xs text-muted">집행이 끝나면 결산 보고서가 만들어집니다.</p>
         </div>
         <ul className="divide-y divide-line">
           {pending.map((s) => (

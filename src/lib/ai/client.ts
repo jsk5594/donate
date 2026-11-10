@@ -25,11 +25,20 @@ export interface GenerateResult {
   engine: EngineInfo;
 }
 
+/** 모든 AI 기능에 공통으로 붙이는 문체 기준 — 화면 글이 사람이 쓴 안내문처럼 읽히도록 */
+const PLAIN_STYLE = `
+[문체]
+- 공공기관 안내문처럼 짧고 평이한 문장으로 씁니다. 한 문장에 한 가지 내용만 담습니다.
+- 줄표(—)와 이모지를 쓰지 않습니다. 따옴표나 괄호로 꾸미지 않습니다.
+- '핵심', '종합적으로', '~라고 할 수 있습니다', '~하는 것이 중요합니다' 같은 상투적 표현과 과장된 수식어를 쓰지 않습니다.
+- 숫자와 사실을 먼저 말하고, 결론을 되풀이하지 않습니다.`;
+
 export async function generate(opts: GenerateOptions): Promise<GenerateResult | null> {
   const p = activeProvider();
   if (!p) return null;
   try {
-    const text = await CALL[p.id](p, opts);
+    const text = await CALL[p.id](p, { ...opts, system: `${opts.system}
+${PLAIN_STYLE}` });
     if (!text?.trim()) return null;
     return { text: text.trim(), engine: { mode: "live", label: `${p.label} · ${p.model}` } };
   } catch (e) {

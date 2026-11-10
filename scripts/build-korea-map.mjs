@@ -1,6 +1,7 @@
 /**
  * 시·도 경계 GeoJSON을 화면용 SVG 경로로 바꿉니다 → src/lib/korea-map.json
  *
+ * 광주·전남은 전남광주통합특별시(2026. 7. 1. 출범) 한 구역으로 합칩니다(아래 merged).
  * 원본: 통계청 센서스 경계 2018 (southkorea/southkorea-maps, kostat/2018/json/skorea-provinces-2018-geo.json)
  * 이 스크립트 전에 경계를 공유한 채 단순화합니다:
  *   npx mapshaper@0.6.102 provinces.json -simplify 4% keep-shapes -filter-islands min-area=8km2 -clean \
@@ -84,14 +85,25 @@ const regions = geo.features.map((f) => {
     path += `M${x - r},${y}a${r},${r} 0 1,0 ${r * 2},0a${r},${r} 0 1,0 ${-r * 2},0Z`;
   }
   const [labelX, labelY] = project([lon, lat]).map(r1);
-  return { id, name, path, labelX, labelY };
+  return { id, name, path, labelX, labelY, code: f.properties.code };
 });
+
+/**
+ * 전남광주통합특별시(2026. 7. 1. 출범, 「전남광주통합특별시 설치를 위한 특별법」) — 광주(24)와 전남(36)을 한 구역으로.
+ * 2018년 경계 원본에서 광주는 전남 안의 구멍(안쪽 고리)이므로, 전남의 바깥 고리만 남기면 두 지역을 합친 모양이 됩니다.
+ * 화면 약칭은 '전남광주'(법률상 약칭 '광주특별시'는 옛 광주광역시와 헷갈려 쓰지 않음).
+ */
+const jeonnam = geo.features.find((f) => f.properties.code === "36");
+const jeonnamPolys = jeonnam.geometry.type === "Polygon" ? [jeonnam.geometry.coordinates] : jeonnam.geometry.coordinates;
+const [mergedX, mergedY] = project([126.95, 34.75]).map(r1);
+const merged = { id: "전남광주", name: "전남광주통합특별시", path: jeonnamPolys.map((poly) => ringPath(poly[0])).join(""), labelX: mergedX, labelY: mergedY };
+const regionsOut = regions.filter((r) => r.code !== "24").map(({ code, ...r }) => (code === "36" ? merged : r));
 
 const out = {
   width: Math.round(project([MAINLAND_CENTER_LON, LAT0])[0] * 2),
   height: Math.ceil(project([LON0, 32.95])[1]),
   inset: { ...INSET, labels: [{ name: "울릉도", x: ULLEUNG_AT.x, y: INSET.y + 74 }, { name: "독도", x: DOKDO_AT.x, y: INSET.y + 74 }] },
-  regions,
+  regions: regionsOut,
 };
 writeFileSync("src/lib/korea-map.json", `${JSON.stringify(out)}\n`);
-console.log(`src/lib/korea-map.json · ${regions.length}개 시·도 · ${out.width}x${out.height} · ${Math.round(JSON.stringify(out).length / 1024)}KB`);
+console.log(`src/lib/korea-map.json · ${regionsOut.length}개 시·도 · ${out.width}x${out.height} · ${Math.round(JSON.stringify(out).length / 1024)}KB`);

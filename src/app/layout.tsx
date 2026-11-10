@@ -6,7 +6,7 @@ import { engineInfo } from "@/lib/ai/config";
 import { sampleDonorCodes } from "@/lib/repository";
 
 export const metadata: Metadata = {
-  title: "기부CCTV — 투명한 기부금 모니터링",
+  title: "기부 돋보기 | 투명한 기부, 따뜻한 세상",
   description: "기부받은 돈 = 쓰인 돈 + 잔액. 기부금이 올바르게 쓰이는지 누구나 확인하는 대차대조표형 공개 플랫폼",
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="min-w-0 flex-1 px-5 py-6 lg:px-8">{children}</main>
         </div>
         <footer className="border-t border-line bg-card px-5 py-4 text-center text-xs text-muted">
-          기부CCTV · 모든 수치는 가상 데이터입니다 · 기부자·수혜자 이름은 가명처리되어 표시됩니다
+          기부 돋보기 · 투명한 기부, 따뜻한 세상 · 기부자와 수혜자 이름은 가명으로 표시합니다
         </footer>
         {/* 모든 페이지 오른쪽 아래에 떠 있는 기부 도우미 */}
         <ChatLauncher engine={engineInfo()} sampleCode={sampleDonorCodes()[0]?.code} />

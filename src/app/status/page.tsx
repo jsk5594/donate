@@ -36,7 +36,7 @@ interface Row {
   fundraising: number;
 }
 
-/** 기부 현황 — '기부 현황 조회'(연도·항목·진행상황 체크) / '기부 위기 감지'(위반·주의 모집건) 탭 */
+/** 기부 현황 — '기부 현황 조회'(연도·항목·진행상황 체크) / '확인 필요 모집건'(위반·주의 모집건) 탭 */
 export default async function StatusPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
   if (params.tab === "risk") {
@@ -309,7 +309,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
 function StatusHeader({ tab }: { tab: "search" | "risk" }) {
   const tabs = [
     { key: "search", href: "/status", label: "기부 현황 조회", on: "bg-primary text-white", off: "text-muted hover:bg-primary-soft hover:text-primary" },
-    { key: "risk", href: "/status?tab=risk", label: "기부 위기 감지", on: "bg-risk-orange text-risk-ink", off: "text-muted hover:bg-risk-hover hover:text-risk-ink" },
+    { key: "risk", href: "/status?tab=risk", label: "확인 필요 모집건", on: "bg-risk-orange text-risk-ink", off: "text-muted hover:bg-risk-hover hover:text-risk-ink" },
   ] as const;
   return (
     <header className="flex">

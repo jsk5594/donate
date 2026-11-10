@@ -1,7 +1,7 @@
 /**
- * 기능 1 — 주관기관 AI 감사
+ * 기능 1 — AI 기관 살펴보기
  * 1) 원장·공시 이력에서 지표를 계산(결정적, 검증 가능)
- * 2) AI가 지표·연도별 이력·처분 이력·현재 모집건 판정을 함께 읽고 "기부를 맡겨도 되는가" 감사의견을 작성
+ * 2) AI가 지표·연도별 이력·처분 이력·현재 모집건 판정을 함께 읽고 "기부를 맡겨도 되는가" 점검 의견을 작성
  *    - AI는 등급·근거·위험·권고를 쓰고, 근거마다 어떤 지표를 봤는지 적어야 함
  * 3) 키가 없으면 같은 지표로 데모 의견을 생성
  */
@@ -9,12 +9,12 @@
 import { won, pct } from "../format";
 import { getOrganization, ORGANIZATIONS, type Organization } from "../org-data";
 import { getRepository } from "../repository";
-import { legalFundraisingCap, POLICY, SCORE_BANDS } from "../rules";
-import { stageOf, type CampaignSummary, type HealthLevel } from "../types";
+import { fundraisingCapLabel, isStatutory, legalFundraisingCap, POLICY, SCORE_BANDS } from "../rules";
+import { stageOf, type CampaignSummary, type HealthLevel, type LegalBasis } from "../types";
 import { generate, parseJsonObject } from "./client";
 import { DEMO_ENGINE, type EngineInfo } from "./config";
 
-export type TrustGrade = "신뢰 가능" | "주의 필요" | "신중 검토";
+export type TrustGrade = "신뢰 가능" | "주의 필요" | "추가 확인 권장";
 
 export interface OrgSignal {
   key: string;
@@ -45,6 +45,7 @@ export interface OrgMetrics {
   minorIssues: number;
   currentCampaigns: { id: string; title: string; status: string; health: HealthLevel; score: number | null }[];
   indicatorScore: number; // 0~100 (지표 기반 참고 점수)
+  basis: { legalBasis: LegalBasis }; // 주된 모금의 근거 법률 — 모금비용 한도를 법정/세칙 준용으로 구분
 }
 
 export interface OrgAuditOpinion {
@@ -78,6 +79,7 @@ export async function computeOrgMetrics(org: Organization, campaigns?: CampaignS
   const current = all.filter((s) => s.campaign.organizer === org.name && s.campaign.status !== "완료");
 
   const m: OrgMetrics = {
+    basis: { legalBasis: org.legalBasis ?? "기부금품법" },
     years: ys.length,
     totalReceived,
     avgProgram: ys.reduce((s, y) => s + y.program, 0) / (totalReceived || 1),
@@ -126,7 +128,7 @@ function indicatorScore(m: OrgMetrics): number {
 }
 
 export function gradeOf(score: number): TrustGrade {
-  return score >= SCORE_BANDS.good ? "신뢰 가능" : score >= SCORE_BANDS.warn ? "주의 필요" : "신중 검토";
+  return score >= SCORE_BANDS.good ? "신뢰 가능" : score >= SCORE_BANDS.warn ? "주의 필요" : "추가 확인 권장";
 }
 
 export function signalsOf(m: OrgMetrics): OrgSignal[] {
@@ -134,7 +136,7 @@ export function signalsOf(m: OrgMetrics): OrgSignal[] {
   return [
     { key: "program", label: "최근 사업수행비용 비중 (총지출 대비)", level: lv(m.latestProgramShare < POLICY.programShareMin, m.latestProgramShare < POLICY.programShareGood), value: `${pct(m.latestProgramShare)} (수입 대비 ${pct(m.latestProgram)})`, basis: "BBB 65% 이상 · 권장 75%" },
     { key: "admin", label: "최근 운영비 비율", level: lv(m.latestAdmin > POLICY.adminRatioBad, m.latestAdmin > POLICY.adminRatioWarn), value: `${pct(m.latestAdmin)} (5년 ${m.adminTrend >= 0 ? "+" : ""}${(m.adminTrend * 100).toFixed(1)}%p)`, basis: "운영 세칙 10% 이하" },
-    { key: "fundraising", label: "모금비용 법정 한도 초과", level: lv(m.fundraisingOverCapYears >= 2, m.fundraisingOverCapYears === 1), value: `${m.fundraisingOverCapYears}개 연도 (최고 ${pct(m.maxFundraising)})`, basis: "기부금품법 제13조·시행령" },
+    { key: "fundraising", label: `모금비용 ${fundraisingCapLabel(m.basis)} 초과`, level: lv(m.fundraisingOverCapYears >= 2, m.fundraisingOverCapYears === 1), value: `${m.fundraisingOverCapYears}개 연도 (최고 ${pct(m.maxFundraising)})`, basis: isStatutory(m.basis) ? "기부금품법 제13조·시행령" : `세칙 제2조의2 (제13조 비율 준용 · ${m.basis.legalBasis})` },
     { key: "disclosure", label: "결산 공시 지연", level: lv(m.maxDelay > 30, m.maxDelay > 14), value: `평균 ${m.avgDelay.toFixed(0)}일 · 최장 ${m.maxDelay}일`, basis: "기부금품법 제14조 공개의무" },
     { key: "audit", label: "외부감사 의견", level: lv(m.qualifiedAudits >= 2, m.qualifiedAudits === 1 || m.missingAudits >= 2), value: `한정 이하 ${m.qualifiedAudits}회 · 미실시 ${m.missingAudits}회`, basis: "공익법인 외부회계감사" },
     { key: "issues", label: "행정처분·지적", level: lv(m.majorIssues > 0, m.minorIssues > 0), value: `중대 ${m.majorIssues}건 · 경미 ${m.minorIssues}건`, basis: "관할청 처분·공시 정정 이력" },
@@ -142,8 +144,8 @@ export function signalsOf(m: OrgMetrics): OrgSignal[] {
   ];
 }
 
-// ---------- 2) AI 감사의견 ----------
-const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부CCTV'의 감사 AI입니다. 기부자가 이 주관기관에 기부를 맡겨도 되는지 판단하도록 돕습니다.
+// ---------- 2) AI 점검 의견 ----------
+const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부 돋보기'의 점검 도우미 AI입니다. 기부자가 이 주관기관에 기부를 맡겨도 되는지 판단하도록 돕습니다.
 규칙:
 - 제공된 [기관 데이터]만 근거로 판단합니다. 데이터에 없는 사실·소문·외부 평판을 지어내지 마세요.
 - 숫자는 데이터에 있는 값만 그대로 인용합니다.
@@ -158,7 +160,7 @@ const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부CCTV'의 감사 A
 
 function dataForPrompt(org: Organization, m: OrgMetrics) {
   return {
-    기관: { 이름: org.name, 법인형태: org.legalType, 설립: org.founded, 사업분야: org.field, 지정기부금단체: org.designated },
+    기관: { 이름: org.name, 법인형태: org.legalType, 설립: org.founded, 사업분야: org.field, 지정기부금단체: org.designated, 근거법률: m.basis.legalBasis },
     연도별결산: org.years.map((y) => ({
       연도: y.year,
       기부금수입: won(y.received),
@@ -166,7 +168,7 @@ function dataForPrompt(org: Organization, m: OrgMetrics) {
       사업수행비용비중_총지출대비: pct(y.program / (y.program + y.admin + y.fundraising || 1)),
       운영비비율: pct(y.admin / y.received),
       모금비용비율: pct(y.fundraising / y.received),
-      법정모금비용한도: pct(legalFundraisingCap(y.received), 0),
+      모금비용한도: `${pct(legalFundraisingCap(y.received), 0)} (${fundraisingCapLabel(m.basis)})`,
       이월잔액비율: pct(y.carryover / y.received),
       수혜: y.beneficiaries,
       공시지연일: y.disclosureDelayDays,
@@ -176,7 +178,7 @@ function dataForPrompt(org: Organization, m: OrgMetrics) {
     현재모집건판정: m.currentCampaigns,
     확정등급: gradeOf(m.indicatorScore),
     확정점수: m.indicatorScore,
-    판정기준: { 사업비비중: "총지출의 65% 이상(권장 75%)", 운영비: "10% 이하", 모금비용: "법정 한도 이하", 공시: "기한 내", 이월잔액: "30% 이하" },
+    판정기준: { 사업비비중: "총지출의 65% 이상(권장 75%)", 운영비: "10% 이하", 모금비용: `${fundraisingCapLabel(m.basis)} 이하`, 공시: "기한 내", 이월잔액: "30% 이하" },
   };
 }
 
@@ -184,7 +186,7 @@ function isOpinion(x: unknown): x is OrgAuditOpinion {
   const o = x as OrgAuditOpinion;
   return (
     !!o &&
-    ["신뢰 가능", "주의 필요", "신중 검토"].includes(o.grade) &&
+    ["신뢰 가능", "주의 필요", "추가 확인 권장"].includes(o.grade) &&
     typeof o.score === "number" &&
     typeof o.headline === "string" &&
     typeof o.summary === "string" &&
@@ -213,7 +215,7 @@ export async function auditOrganization(orgId: string): Promise<OrgAuditResult |
   let result: OrgAuditResult;
   const parsed = ai ? parseJsonObject<OrgAuditOpinion>(ai.text) : null;
   if (ai && isOpinion(parsed)) {
-    // 목록 배지와 감사의견이 어긋나지 않도록 등급·점수는 지표 값으로 고정
+    // 목록 배지와 점검 의견이 어긋나지 않도록 등급·점수는 지표 값으로 고정
     parsed.grade = gradeOf(m.indicatorScore);
     parsed.score = m.indicatorScore;
     result = { organizationId: orgId, opinion: parsed, engine: ai.engine, generatedAt: new Date().toISOString() };
@@ -223,7 +225,7 @@ export async function auditOrganization(orgId: string): Promise<OrgAuditResult |
       opinion: demoOpinion(org, m),
       engine: DEMO_ENGINE,
       generatedAt: new Date().toISOString(),
-      ...(ai ? { fallbackReason: "AI 응답이 형식 검증을 통과하지 못해 데모 의견으로 대체했습니다." } : {}),
+      ...(ai ? { fallbackReason: "AI 응답이 형식 검증을 통과하지 못해 원장 기준 의견으로 표시합니다." } : {}),
     };
   }
   cache.set(orgId, result);
@@ -255,7 +257,7 @@ function demoOpinion(org: Organization, m: OrgMetrics): OrgAuditOpinion {
     risks.push({ title: "운영비 비중이 높습니다", evidence: `${last.year}년 운영비 ${pct(m.latestAdmin)} (세칙 한도 10%), ${m.years}년간 ${(m.adminTrend * 100).toFixed(1)}%p 증가` });
   if (m.fundraisingOverCapYears > 0) {
     const over = ys.filter((y) => y.fundraising / y.received > legalFundraisingCap(y.received)).map((y) => `${y.year}년 ${pct(y.fundraising / y.received)}`);
-    risks.push({ title: `모금비용이 법정 한도를 ${m.fundraisingOverCapYears}번 넘었습니다`, evidence: `${over.join(", ")} — 처분 후에도 재발` });
+    risks.push({ title: `모금비용이 ${fundraisingCapLabel(m.basis)}를 ${m.fundraisingOverCapYears}번 넘었습니다`, evidence: `${over.join(", ")}. 처분 뒤에도 다시 발생` });
   }
   if (m.maxDelay > 14) risks.push({ title: "결산 공시가 늦어지고 있습니다", evidence: `공시 지연 ${ys.map((y) => `${y.year}년 ${y.disclosureDelayDays}일`).join(" → ")}` });
   if (m.qualifiedAudits > 0) risks.push({ title: "외부감사에서 '한정' 의견을 받았습니다", evidence: ys.filter((y) => y.auditOpinion === "한정" || y.auditOpinion === "부적정").map((y) => `${y.year}년 ${y.auditOpinion}`).join(", ") });

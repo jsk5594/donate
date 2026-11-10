@@ -75,7 +75,7 @@ export function LiveDonationTicker({ initial }: { initial: LiveItem[] }) {
 
   return (
     // 본문 폭을 벗어나 화면 양 끝까지 닿는 띠 (넘치는 폭은 body의 overflow-x-clip이 자름)
-    <section aria-label={`${title} — 가명처리된 기부자명`} className="no-print -mt-6 ml-[calc(50%-50vw)] flex h-11 w-screen items-stretch border-b border-line bg-card">
+    <section aria-label={`${title}(기부자명은 가명)`} className="no-print -mt-6 ml-[calc(50%-50vw)] flex h-11 w-screen items-stretch border-b border-line bg-card">
       <h2 className="flex shrink-0 items-center gap-2 border-r border-line px-4 text-sm font-bold lg:px-5">
         <span className="relative flex h-2.5 w-2.5">
           <span className={`absolute inline-flex h-full w-full rounded-full bg-bad opacity-75 ${LIVE_PAUSED ? "hidden" : "animate-ping"}`} />

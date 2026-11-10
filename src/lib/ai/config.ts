@@ -66,12 +66,12 @@ export function activeProvider(): ProviderConfig | null {
 /** 화면 표시용 엔진 정보 */
 export interface EngineInfo {
   mode: "live" | "demo";
-  label: string; // 예: "Anthropic Claude · claude-sonnet-5-5" / "데모 모드(AI 미연결)"
+  label: string; // 예: "Anthropic Claude · claude-sonnet-5-5" / "자동 분석"(AI 미연결)
 }
 
 export function engineInfo(): EngineInfo {
   const p = activeProvider();
-  return p ? { mode: "live", label: `${p.label} · ${p.model}` } : { mode: "demo", label: "데모 모드(AI 미연결)" };
+  return p ? { mode: "live", label: `${p.label} · ${p.model}` } : { mode: "demo", label: "자동 분석" };
 }
 
-export const DEMO_ENGINE: EngineInfo = { mode: "demo", label: "데모 모드(AI 미연결)" };
+export const DEMO_ENGINE: EngineInfo = { mode: "demo", label: "자동 분석" };

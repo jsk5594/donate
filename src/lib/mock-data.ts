@@ -3,6 +3,7 @@
  * DB 연결 후에는 이 파일 대신 repository.ts의 DbRepository가 실데이터를 읽습니다.
  */
 
+import { refineExpenses, type AuditTruth } from "./audit-plants.ts";
 import type { Campaign, Category, DonationRecord, DonorType, ExpenseRecord, ExpenseType } from "./types";
 
 // ---------- 시드 난수 ----------
@@ -29,6 +30,8 @@ export const CATEGORIES: Category[] = [
 ];
 
 // ---------- 모집건(캠페인) ----------
+// 지역 표기: 2026. 7. 1. 이후 모집건은 전남광주통합특별시('전남광주'), 그 전에 끝난 모집건은 당시 지명(전남·광주)을 그대로 둠.
+// 지도·통계는 regions.ts에서 옛 지명도 '전남광주'로 묶어 셈.
 interface CampaignSeed extends Campaign {
   /** 수입 목표(원) 및 사용 비율 설계 — 이상 사례를 일부러 심어둠 */
   plan: { received: number; program: number; admin: number; fundraising: number; donations: number };
@@ -40,7 +43,8 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "disaster",
     title: "거제도 홍수 피해 복구",
     region: "경남 거제시",
-    organizer: "거제시 재난구호협의회",
+    organizer: "거제한마음재난구호회",
+    legalBasis: "재해구호법",
     registrationNo: "경남-2026-0712",
     purpose: "2026년 8월 집중호우로 침수된 주택 복구비와 생필품을 피해 가구 320세대에 지원합니다.",
     goal: 5_0000_0000,
@@ -56,7 +60,8 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "disaster",
     title: "부산 지진 피해 가구 지원",
     region: "부산광역시",
-    organizer: "부산사회복지공동모금회(가상)",
+    organizer: "부산지진피해나눔연대",
+    legalBasis: "재해구호법",
     registrationNo: "행안-2026-0455",
     purpose: "지진으로 거주지가 파손된 가구의 임시주거비와 안전점검·보수 비용을 지원합니다.",
     goal: 8_0000_0000,
@@ -72,7 +77,8 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "disaster",
     title: "강원 산불 이재민 주거 지원",
     region: "강원 강릉·동해",
-    organizer: "강원도 재해구호기금(가상)",
+    organizer: "강원재해복구나눔재단",
+    legalBasis: "재해구호법",
     registrationNo: "강원-2026-0203",
     purpose: "산불로 주택을 잃은 이재민에게 임시조립주택과 생활안정 자금을 지원합니다.",
     goal: 6_0000_0000,
@@ -90,6 +96,7 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     title: "하동군 취약계층 겨울 난방 지원",
     region: "경남 하동군",
     organizer: "하동군(고향사랑기부제 지정기부)",
+    legalBasis: "고향사랑기부금법",
     registrationNo: "고향-2026-HD-01",
     purpose: "에너지 취약가구 540세대에 난방유·전기장판·단열용품을 지원합니다.",
     goal: 2_0000_0000,
@@ -106,6 +113,7 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     title: "영양군 청년 정착 지원",
     region: "경북 영양군",
     organizer: "영양군(고향사랑기부제 지정기부)",
+    legalBasis: "고향사랑기부금법",
     registrationNo: "고향-2026-YY-02",
     purpose: "귀촌 청년 창업 공간 조성과 정착 장려금을 지원합니다.",
     goal: 1_5000_0000,
@@ -121,8 +129,9 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "welfare",
     title: "독거어르신 겨울나기",
     region: "전국",
-    organizer: "따뜻한이웃복지회(가상)",
-    registrationNo: "행안-2026-0611",
+    organizer: "따뜻한이웃복지회",
+    legalBasis: "기부금품법",
+    registrationNo: "서울-2026-0611",
     purpose: "독거어르신 1,200명에게 김장김치·방한용품·안부전화 서비스를 제공합니다.",
     goal: 3_0000_0000,
     startDate: "2026-09-15",
@@ -138,8 +147,9 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "welfare",
     title: "장애아동 보조기기 지원",
     region: "전국",
-    organizer: "어린이재활나눔재단(가상)",
-    registrationNo: "행안-2026-0702",
+    organizer: "어린이재활나눔재단",
+    legalBasis: "기부금품법",
+    registrationNo: "서울-2026-0702",
     purpose: "저소득 장애아동 90명에게 맞춤형 휠체어·보청기·의사소통 보조기기를 지원합니다.",
     goal: 4_0000_0000,
     startDate: "2026-10-10",
@@ -153,9 +163,10 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     id: "kca-digital",
     categoryId: "education",
     title: "도서지역 청소년 디지털 격차 해소",
-    region: "전남·경남 도서지역",
-    organizer: "한국방송통신전파진흥원 사회공헌기금",
-    registrationNo: "행안-2026-0417",
+    region: "전남광주·경남 도서지역",
+    organizer: "섬마을디지털배움재단",
+    legalBasis: "기부금품법",
+    registrationNo: "전남광주-2026-0417",
     purpose: "도서·산간 청소년 100명에게 노트북과 디지털 교육을 지원합니다.",
     goal: 5000_0000,
     startDate: "2026-09-01",
@@ -170,7 +181,8 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "environment",
     title: "남해안 해양쓰레기 수거",
     region: "경남 통영·남해",
-    organizer: "푸른바다시민연대(가상)",
+    organizer: "푸른바다시민연대",
+    legalBasis: "기부금품법",
     registrationNo: "경남-2026-0822",
     purpose: "어촌계와 함께 연안 해양쓰레기를 수거하고 재활용 체계를 구축합니다.",
     goal: 1_2000_0000,
@@ -191,7 +203,8 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "disaster",
     title: "영덕 태풍 피해 어가 복구",
     region: "경북 영덕군",
-    organizer: "경북재해구호협회(가상)",
+    organizer: "경북재난이웃돕기회",
+    legalBasis: "재해구호법",
     registrationNo: "경북-2025-0918",
     purpose: "2025년 9월 태풍으로 파손된 어선·양식시설 복구비와 피해 어가 생활안정 자금을 지원했습니다.",
     goal: 7_0000_0000,
@@ -209,6 +222,7 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     title: "고성군 농촌 어린이 통학버스 지원",
     region: "강원 고성군",
     organizer: "고성군(고향사랑기부제 지정기부)",
+    legalBasis: "고향사랑기부금법",
     registrationNo: "고향-2025-GS-03",
     purpose: "대중교통이 닿지 않는 마을 초등학생을 위한 통학버스 2대 구입과 1년 운행비를 지원했습니다.",
     goal: 1_8000_0000,
@@ -225,8 +239,9 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "welfare",
     title: "결식우려아동 여름방학 도시락",
     region: "서울·경기",
-    organizer: "한끼나눔아동재단(가상)",
-    registrationNo: "행안-2025-0533",
+    organizer: "한끼나눔아동재단",
+    legalBasis: "기부금품법",
+    registrationNo: "서울-2025-0533",
     purpose: "여름방학 중 급식이 끊기는 아동 1,500명에게 40일간 영양 도시락을 배달했습니다.",
     goal: 2_5000_0000,
     startDate: "2025-06-01",
@@ -243,8 +258,9 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "education",
     title: "농어촌 학교 원어민 화상수업",
     region: "전북·전남 농어촌",
-    organizer: "배움다리교육재단(가상)",
-    registrationNo: "행안-2025-0208",
+    organizer: "배움다리교육재단",
+    legalBasis: "기부금품법",
+    registrationNo: "서울-2025-0208",
     purpose: "원어민 교사가 없는 농어촌 초·중학교 30곳에 1년간 원어민 화상 영어수업을 제공했습니다.",
     goal: 9000_0000,
     startDate: "2025-02-10",
@@ -260,7 +276,8 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "environment",
     title: "제주 곶자왈 숲 복원",
     region: "제주 서귀포시",
-    organizer: "곶자왈생명숲네트워크(가상)",
+    organizer: "곶자왈생명숲네트워크",
+    legalBasis: "기부금품법",
     registrationNo: "제주-2025-0411",
     purpose: "훼손된 곶자왈 12ha에 자생수종 묘목 3만 그루를 심고 2년간 생육을 관리하는 1단계 사업을 마쳤습니다.",
     goal: 1_5000_0000,
@@ -279,9 +296,10 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     id: "sumjin-otter",
     categoryId: "environment",
     title: "섬진강 수달 서식지 보전",
-    region: "전남 구례·광양",
-    organizer: "섬진강생태지킴이(가상)",
-    registrationNo: "전남-2026-1104",
+    region: "전남광주 구례·광양",
+    organizer: "섬진강생태지킴이",
+    legalBasis: "기부금품법",
+    registrationNo: "전남광주-2026-1104",
     purpose: "섬진강 하류 수달 서식지 5km 구간에 생태 하천 정비와 무인 관찰 카메라를 설치합니다.",
     goal: 1_0000_0000,
     startDate: "2026-11-20",
@@ -296,8 +314,9 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     categoryId: "welfare",
     title: "보육원 퇴소 청년 자립 지원",
     region: "전국",
-    organizer: "홀로서기청년재단(가상)",
-    registrationNo: "행안-2026-0915",
+    organizer: "홀로서기청년재단",
+    legalBasis: "기부금품법",
+    registrationNo: "서울-2026-0915",
     purpose: "보호 종료 청년 200명에게 주거 보증금과 1:1 자립 멘토링을 지원합니다.",
     goal: 3_5000_0000,
     startDate: "2026-12-01",
@@ -313,6 +332,7 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
     title: "울릉군 응급 헬기 이착륙장 정비",
     region: "경북 울릉군",
     organizer: "울릉군(고향사랑기부제 지정기부)",
+    legalBasis: "고향사랑기부금법",
     registrationNo: "고향-2026-UL-04",
     purpose: "기상 악화 시 응급환자 이송을 위해 야간 조명·제설 설비를 갖춘 헬기 이착륙장 2곳을 정비합니다.",
     goal: 2_4000_0000,
@@ -330,18 +350,18 @@ const CAMPAIGN_SEEDS: CampaignSeed[] = [
 // 기관별 성향은 주관기관 감사 데이터(org-data.ts)와 맞춤: 푸른바다=모금비용 높음, 따뜻한이웃=운영비 높음.
 const HISTORY_ORGS: Record<string, { name: string; admin: [number, number]; fundraising: [number, number] }[]> = {
   disaster: [
-    { name: "강원도 재해구호기금(가상)", admin: [0.05, 0.075], fundraising: [0.03, 0.05] },
-    { name: "경북재해구호협회(가상)", admin: [0.04, 0.06], fundraising: [0.03, 0.045] },
+    { name: "강원재해복구나눔재단", admin: [0.05, 0.075], fundraising: [0.03, 0.05] },
+    { name: "경북재난이웃돕기회", admin: [0.04, 0.06], fundraising: [0.03, 0.045] },
   ],
   welfare: [
-    { name: "따뜻한이웃복지회(가상)", admin: [0.075, 0.115], fundraising: [0.04, 0.06] },
-    { name: "한끼나눔아동재단(가상)", admin: [0.05, 0.08], fundraising: [0.03, 0.05] },
-    { name: "어린이재활나눔재단(가상)", admin: [0.04, 0.06], fundraising: [0.03, 0.045] },
+    { name: "따뜻한이웃복지회", admin: [0.075, 0.115], fundraising: [0.04, 0.06] },
+    { name: "한끼나눔아동재단", admin: [0.05, 0.08], fundraising: [0.03, 0.05] },
+    { name: "어린이재활나눔재단", admin: [0.04, 0.06], fundraising: [0.03, 0.045] },
   ],
-  education: [{ name: "배움다리교육재단(가상)", admin: [0.045, 0.065], fundraising: [0.025, 0.04] }],
+  education: [{ name: "배움다리교육재단", admin: [0.045, 0.065], fundraising: [0.025, 0.04] }],
   environment: [
-    { name: "푸른바다시민연대(가상)", admin: [0.05, 0.07], fundraising: [0.11, 0.175] },
-    { name: "곶자왈생명숲네트워크(가상)", admin: [0.05, 0.07], fundraising: [0.03, 0.045] },
+    { name: "푸른바다시민연대", admin: [0.05, 0.07], fundraising: [0.11, 0.175] },
+    { name: "곶자왈생명숲네트워크", admin: [0.05, 0.07], fundraising: [0.03, 0.045] },
   ],
 };
 const COUNTIES = [
@@ -424,15 +444,22 @@ function buildHistorySeeds(): CampaignSeed[] {
         const admin = between(org.admin[0], org.admin[1]);
         const fundraising = between(org.fundraising[0], org.fundraising[1]);
         const seq = out.length + 1;
+        const goal = Math.round((received / between(0.9, 1.1)) / 1000_0000) * 1000_0000;
         out.push({
           id: `h${year}-${cat.id}-${k + 1}`,
           categoryId: cat.id,
           title: t.title.replace("{r}", regionShort).replace("{c}", county[0]),
           region,
           organizer: org.name,
-          registrationNo: cat.id === "hometown" ? `고향-${year}-${county[2]}-${String(seq).padStart(2, "0")}` : `행안-${year}-${String(100 + seq * 7).padStart(4, "0")}`,
+          // 근거법: 고향사랑 → 고향사랑기부금법, 재난(재해구호기금·협회) → 재해구호법, 그 외 → 기부금품법
+          legalBasis: cat.id === "hometown" ? "고향사랑기부금법" : cat.id === "disaster" ? "재해구호법" : "기부금품법",
+          // 기부금품법 모집건의 접두어는 등록청(목표 10억 이하 시·도 — 주된 사무소 서울 가정, 10억 초과 행정안전부)
+          registrationNo:
+            cat.id === "hometown"
+              ? `고향-${year}-${county[2]}-${String(seq).padStart(2, "0")}`
+              : `${cat.id !== "disaster" && goal <= 10_0000_0000 ? "서울" : "행안"}-${year}-${String(100 + seq * 7).padStart(4, "0")}`,
           purpose: t.purpose,
-          goal: Math.round((received / between(0.9, 1.1)) / 1000_0000) * 1000_0000,
+          goal,
           startDate: iso(start),
           endDate: iso(end),
           status: "완료",
@@ -449,7 +476,7 @@ function buildHistorySeeds(): CampaignSeed[] {
 
 CAMPAIGN_SEEDS.push(...buildHistorySeeds());
 
-/** 이자수익 등 기타수입(가상): 수입의 0.1%를 천원 단위로 */
+/** 이자수익 등 기타수입: 수입의 0.1%를 천원 단위로 */
 export function interestIncomeFor(received: number) {
   return Math.round((received * 0.001) / 1000) * 1000;
 }
@@ -471,7 +498,7 @@ const STAT: Record<ExpenseType, { code: string; name: string; vendors: string[];
   일반관리비용: [
     { code: "A-101", name: "관리인력 인건비", vendors: ["관리직 급여"], desc: ["회계·행정 담당 급여", "사무국 인건비"] },
     { code: "A-201", name: "사무실 임차·관리", vendors: ["○○빌딩 관리사무소"], desc: ["사무실 임차료", "관리비·공과금"] },
-    { code: "A-301", name: "회계감사·법무", vendors: ["한결회계법인", "법무법인 바른길"], desc: ["외부 회계감사 수수료", "자문 수수료"] },
+    { code: "A-301", name: "회계감사·법무", vendors: ["외부 회계법인", "자문 법무법인"], desc: ["외부 회계감사 수수료", "자문 수수료"] },
     { code: "A-401", name: "통신·소모품", vendors: ["KT", "오피스디포"], desc: ["통신요금", "사무용품 구매"] },
   ],
   모금비용: [
@@ -485,7 +512,7 @@ const STAT: Record<ExpenseType, { code: string; name: string; vendors: string[];
 // ---------- 기부 메시지 ----------
 const SHORT_MESSAGES = ["힘내세요!", "작지만 보탭니다.", "빠른 복구를 기원합니다.", "투명하게 써주세요.", "응원합니다."];
 
-/** 개인 기부자가 남긴 긴 메시지 (가상). 항목별로 모집 목적에 맞는 내용 */
+/** 개인 기부자가 남긴 긴 메시지 . 항목별로 모집 목적에 맞는 내용 */
 const STORY_MESSAGES: Record<string, string[]> = {
   disaster: [
     "몇 해 전 저희 집도 큰 재난을 겪었습니다. 그때 낯선 분들이 건네준 따뜻한 밥 한 끼를 아직 잊지 못해서, 이제는 제가 갚을 차례라고 생각합니다.",
@@ -690,8 +717,19 @@ export function getDataset(): Dataset {
     donations.push(...generateDonations(seed, rng));
     expenses.push(...generateExpenses(seed, rng));
   }
-  cached = { categories: CATEGORIES, campaigns, donations, expenses };
+  // 적요를 항목에 맞추고 AI 지출 점검 시연 사례를 심음(난수 미사용, 유형별 합계 불변)
+  const refined = refineExpenses(campaigns, expenses);
+  auditTruth = refined.truth;
+  cached = { categories: CATEGORIES, campaigns, donations, expenses: refined.expenses };
   return cached;
+}
+
+let auditTruth: AuditTruth | null = null;
+
+/** AI 지출 점검 시연용 정답 데이터(심어 둔 사례) — 탐지율·오탐 측정에 사용 */
+export function getAuditTruth(): AuditTruth {
+  if (!auditTruth) getDataset();
+  return auditTruth!;
 }
 
 /**

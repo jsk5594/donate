@@ -21,6 +21,13 @@ export function stageOf(status: CampaignStatus): Stage {
   return "진행중";
 }
 
+/**
+ * 모집건의 근거 법률 — 기부금품법 제3조는 다른 법률로 모집하는 경우 적용을 제외한다(세칙 제2조의2).
+ * 법정 모금비용 한도(제13조)·모집등록(제4조)은 '기부금품법' 모집건에만 법정 기준으로 적용된다.
+ */
+export const LEGAL_BASES = ["기부금품법", "재해구호법", "고향사랑기부금법", "사회복지공동모금회법"] as const;
+export type LegalBasis = (typeof LEGAL_BASES)[number];
+
 export interface Category {
   id: string;
   name: string; // 재난, 고향사랑, 복지, 교육, 환경 ...
@@ -33,7 +40,8 @@ export interface Campaign {
   title: string; // 거제도 홍수 피해 복구 ...
   region: string;
   organizer: string; // 모집기관
-  registrationNo: string; // 기부금품 모집등록번호(가상)
+  legalBasis: LegalBasis; // 근거 법률(세칙 제2조의2)
+  registrationNo: string; // 기부금품법 모집건: 모집등록번호(접두어 = 등록청) · 그 외: 사업 관리번호(가상)
   purpose: string;
   goal: number; // 목표 모집액(원)
   startDate: string; // ISO

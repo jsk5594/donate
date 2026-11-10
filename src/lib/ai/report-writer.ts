@@ -55,7 +55,7 @@ export async function getPublishedReport(campaignId: string): Promise<PublishedR
 }
 
 // ---------- 작성 ----------
-const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부CCTV'의 결산 보고서 작성 AI입니다. 집행이 끝난 모집건의 결산 공개보고서를 기부자에게 게시합니다.
+const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부 돋보기'의 결산 보고서 작성 AI입니다. 집행이 끝난 모집건의 결산 공개보고서를 기부자에게 게시합니다.
 규칙:
 - [원장 사실]에 있는 금액·건수·비율만 인용하세요. 금액은 "1,234,000원"처럼 사실 블록과 똑같은 형식으로 쓰고, 억·만 단위로 바꾸거나 반올림하지 마세요.
 - 사실 블록에 없는 수치를 계산해 새로 만들지 마세요(합계·차이·증감률 포함).
@@ -84,7 +84,7 @@ async function writeReport(detail: CampaignDetail): Promise<PublishedReport> {
     if (v.passed) return { ...base, body: ai.text, engine: ai.engine, verification: v };
     // 검증 실패 → AI 본문은 게시하지 않음
     const demo = demoReport(detail, facts);
-    return { ...base, body: demo, engine: DEMO_ENGINE, verification: { ...verify(demo, facts), note: `AI 본문 검증 실패(${v.note}) — 원장 기반 보고서로 대체 게시` } };
+    return { ...base, body: demo, engine: DEMO_ENGINE, verification: { ...verify(demo, facts), note: `AI 본문 검증 실패(${v.note}). 원장 기준 보고서로 대신 게시` } };
   }
   const demo = demoReport(detail, facts);
   return { ...base, body: demo, engine: DEMO_ENGINE, verification: verify(demo, facts) };
@@ -123,7 +123,7 @@ function demoReport(detail: CampaignDetail, f: SettlementFacts): string {
     ` ○ 운영 세칙 판정 ${health.checks.length}개 항목 중 ${health.checks.length - flagged.length}개 양호${flagged.length ? `, ${flagged.length}개 확인 필요` : ""}.`,
     ``,
     `□ 모집 결과`,
-    ` ○ 기부금 ${won(donated)} — 목표 ${won(campaign.goal)} 대비 ${pct(goalRate)}${goalRate >= 1 ? "로 목표를 넘겼습니다" : ""}.`,
+    ` ○ 기부금 ${won(donated)}, 목표 ${won(campaign.goal)} 대비 ${pct(goalRate)}${goalRate >= 1 ? "로 목표를 넘겼습니다" : ""}.`,
     ` ○ ${mainDonor} 기부가 가장 큰 비중을 차지했습니다: 개인 ${pct(f.donorShare.individual)} · 기업 ${pct(f.donorShare.corporate)} · 단체 ${pct(f.donorShare.group)}.`,
     ` ○ 전용계좌 이자 ${won(sheet.inflow.other)}도 사업비로 함께 집행했습니다.`,
     ``,
@@ -132,7 +132,7 @@ function demoReport(detail: CampaignDetail, f: SettlementFacts): string {
     ...(top ? [` ○ 가장 많은 돈이 들어간 곳은 '${top.name}'(${top.code})로 ${won(top.amount)}, ${top.count}건입니다.`] : []),
     ...(programStats.length > 1 ? [`   - 사업비는 ${programStats.slice(0, 3).map((s) => s.name).join(", ")} 순으로 쓰였습니다.`] : []),
     ` ○ 운영비 ${won(sheet.outflow.admin)}(${pct(sheet.outflow.admin / t)}), 모금비용 ${won(sheet.outflow.fundraising)}(${pct(sheet.outflow.fundraising / t)}).`,
-    ` ○ 미집행 잔액 ${won(sheet.outflow.balance)} — 남은 돈 없이 정산을 마쳤습니다.`,
+    ` ○ 미집행 잔액 ${won(sheet.outflow.balance)}. 남은 돈 없이 정산을 마쳤습니다.`,
     ``,
     `□ 운영 세칙 판정`,
     ...health.checks.map((c) => ` ○ [${c.level}] ${c.label}: ${c.value} (기준 ${c.threshold})`),
