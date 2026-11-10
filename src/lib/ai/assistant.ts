@@ -6,6 +6,7 @@
  */
 
 import { fmtDate, pct, won, wonShort } from "../format";
+import { LEVEL_TEXT } from "../terms";
 import { ORGANIZATIONS } from "../org-data";
 import { getRepository, type MyDonationsResult, type Overview } from "../repository";
 import { CHECK_COUNT, fundraisingCapLabel, needsAttention, POLICY, STATUTE } from "../rules";
@@ -74,7 +75,7 @@ function contextForPrompt(c: Context) {
       모집건수: c.overview.totals.campaignCount,
       기부받은돈: won(c.overview.totals.received),
       사업에쓰인돈: won(c.overview.totals.donated),
-      확인필요모집건: c.overview.campaigns.filter(needsAttention).map((s) => `${s.campaign.title}(${s.health.overall}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")})`),
+      확인필요모집건: c.overview.campaigns.filter(needsAttention).map((s) => `${s.campaign.title}(${LEVEL_TEXT[s.health.overall]}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")})`),
     },
     운영세칙: {
       판정항목수: CHECK_COUNT,
@@ -108,7 +109,7 @@ function contextForPrompt(c: Context) {
       운영비: pct(s.sheet.outflow.admin / (s.sheet.inflow.total || 1)),
       모금비용: pct(s.sheet.outflow.fundraising / (s.sheet.inflow.total || 1)),
       미집행잔액: won(s.sheet.outflow.balance),
-      판정: s.campaign.status === "예정" ? `판정 없음(진행 예정, ${s.campaign.startDate} 모집 시작)` : `기부투명도지수 ${s.health.score}점(${s.health.overall})`,
+      판정: s.campaign.status === "예정" ? `판정 없음(진행 예정, ${s.campaign.startDate} 모집 시작)` : `투명도 점수 ${s.health.score}점(${LEVEL_TEXT[s.health.overall]})`,
       확인필요: s.campaign.status === "예정" ? [] : s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`),
     })),
     언급된주관기관: c.orgs.map((o) => ({ 이름: o.name, 지표등급: o.grade, 지표점수: o.score, 평균사업비비율: pct(o.avgProgram), 최근운영비: pct(o.latestAdmin), 모금비용한도초과연도수: o.overCap, 최장공시지연일: o.maxDelay, 처분지적: o.issues })),
@@ -185,7 +186,7 @@ function demoAnswer(q: string, c: Context): string {
       `${s.campaign.title}(${stageOf(s.campaign.status)})은 지금까지 ${won(s.sheet.inflow.total)}을 모금했습니다.`,
       `- 사업비 ${pct(s.sheet.outflow.program / t)} · 운영비 ${pct(s.sheet.outflow.admin / t)} · 모금비용 ${pct(s.sheet.outflow.fundraising / t)}`,
       `- 아직 쓰이지 않은 돈 ${won(s.sheet.outflow.balance)}`,
-      `- 기부투명도지수 ${s.health.score}점(${s.health.overall})`,
+      `- 투명도 점수 ${s.health.score}점(${LEVEL_TEXT[s.health.overall]})`,
       flagged.length ? `- 확인 필요: ${flagged.map((k) => `${k.label} ${k.value}`).join(", ")}` : `- 운영 세칙 판정은 모두 양호합니다.`,
     ].join("\n");
   }
@@ -193,17 +194,17 @@ function demoAnswer(q: string, c: Context): string {
   if (/문제|위반|주의|이상|확인\s*필요|위험/.test(q)) {
     const list = c.overview.campaigns.filter(needsAttention);
     if (!list.length) return "집행이 끝나지 않은 모집건 중 '주의' 이상인 건은 없습니다.";
-    return [`집행이 끝나지 않은 모집건 중 확인이 필요한 건은 ${list.length}건입니다.`, ...list.map((s) => `- [${s.health.score}점 ${s.health.overall}] ${s.campaign.title}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")}`)].join("\n");
+    return [`집행이 끝나지 않은 모집건 중 확인이 필요한 건은 ${list.length}건입니다.`, ...list.map((s) => `- [${s.health.score}점 ${LEVEL_TEXT[s.health.overall]}] ${s.campaign.title}: ${s.health.checks.filter((k) => k.level !== "양호").map((k) => `${k.label} ${k.value}`).join(", ")}`)].join("\n");
   }
 
   if (/운영비|모금비|기준|세칙|몇\s*%|한도/.test(q)) {
     return [
       "기부 돋보기는 다음 기준으로 모집건을 판정합니다.",
-      `- 운영비(일반관리비용): 수입의 ${pct(POLICY.adminRatioBad, 0)} 이하 (${pct(POLICY.adminRatioWarn, 0)} 초과 시 주의)`,
-      `- 사업비: 총지출의 ${pct(POLICY.programShareMin, 0)} 이상, 권장 ${pct(POLICY.programShareGood, 0)}`,
-      "- 모금비용: 기부금품법 시행령 한도(10억 이하 모금 시 15%). 재해구호법·고향사랑기부금법 등 다른 법률 모집건은 같은 비율을 세칙으로 준용",
+      `- 운영비: 수입의 ${pct(POLICY.adminRatioBad, 0)} 이하 (${pct(POLICY.adminRatioWarn, 0)} 초과 시 주의)`,
+      `- 수혜자에게 간 돈: 쓴 돈의 ${pct(POLICY.programShareMin, 0)} 이상, 권장 ${pct(POLICY.programShareGood, 0)}`,
+      "- 모금에 쓴 돈: 기부금품법 시행령 한도(10억 이하 모금 시 15%). 재해구호법·고향사랑기부금법 등 다른 법률 모집건은 같은 비율을 세칙으로 준용",
       "- 기부금품법 모집건: 목표 1천만원 이상 사전등록, 모집기간 1년 이내, 모집 종료 후 30일·사용 완료 후 60일 이내 보고",
-      `- 모집 종료 후 미집행 잔액 ${pct(POLICY.balanceAfterEndWarn, 0)} 이하 권장`,
+      `- 모집 종료 후 남은 돈 ${pct(POLICY.balanceAfterEndWarn, 0)} 이하 권장`,
     ].join("\n");
   }
 

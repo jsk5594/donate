@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuditTabs } from "@/components/AuditTabs";
 import { KIND_INFO, scanAnomalies, type Severity } from "@/lib/ai/anomaly-audit";
 import type { AnomalyKind } from "@/lib/audit-plants";
 import { getRepository } from "@/lib/repository";
@@ -30,14 +31,11 @@ export default async function AnomalyAuditPage({ searchParams }: { searchParams:
 
   return (
     <div className="flex flex-col gap-6">
-      <nav className="text-xs text-muted" aria-label="경로">
-        <Link href="/organizations" className="hover:text-primary">AI 점검</Link> <span aria-hidden="true">›</span>{" "}
-        <Link href="/ai-check" className="hover:text-primary">AI 지출 점검</Link> <span aria-hidden="true">›</span> 지출 패턴 점검
-      </nav>
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">지출 패턴 점검</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted">모든 모집건의 지출을 검사해 분할 결제, 증빙번호 중복 같은 거래 패턴을 찾습니다. 모집건을 고르면 확인이 필요한 이유와 기관에 물어볼 질문을 볼 수 있습니다.</p>
-      </header>
+      <AuditTabs active="anomaly" />
+      <p className="-mt-2 max-w-3xl text-sm text-muted">
+        모든 모집건의 지출을 검사해 분할 결제, 증빙번호 중복 같은 거래 패턴을 찾습니다. 모집건을 고르면 확인이 필요한 이유와 기관에 물어볼 질문을 볼 수 있습니다. 위법 판정이 아니며, 모집기관 소명과
+        등록청 확인을 거쳐 판단합니다.
+      </p>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="검사한 지출" value={`${scan.scannedExpenses.toLocaleString("ko-KR")}건`} sub={`${scan.scannedCampaigns}개 모집건`} />

@@ -212,14 +212,14 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
   // 1. 정합성: 좌 − 우 = 0
   checks.push({
     key: "integrity",
-    label: "정합성 (기부받은 돈 − 쓰인 돈 − 잔액)",
+    label: "장부 일치 (들어온 돈 = 나간 돈 + 남은 돈)",
     level: Math.abs(sheet.difference) < 1 ? "양호" : "위반",
     value: `${sheet.difference.toLocaleString("ko-KR")}원`,
     threshold: "= 0원",
     basis: "세칙 제3조 (복식 원장 정합성)",
     detail:
       Math.abs(sheet.difference) < 1
-        ? "모든 입금이 사업비·운영비·모금비용·잔액 중 하나로 빠짐없이 설명됩니다."
+        ? "들어온 돈이 모두 수혜자에게 간 돈·운영비·모금에 쓴 돈·남은 돈 중 하나로 설명됩니다."
         : "원장 합계와 계좌 잔액이 일치하지 않습니다. 즉시 설명이 필요합니다.",
     points: Math.abs(sheet.difference) < 1 ? SCORE_WEIGHTS.integrity : 0,
     maxPoints: SCORE_WEIGHTS.integrity,
@@ -231,7 +231,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
   const frRatio = sheet.outflow.fundraising / received;
   checks.push({
     key: "fundraising",
-    label: `모금비용 비율 (${fundraisingCapLabel(campaign)})`,
+    label: `모금에 쓴 돈 비율 (${fundraisingCapLabel(campaign)})`,
     level: frRatio > cap ? "위반" : frRatio > cap * 0.8 ? "주의" : "양호",
     value: `${(frRatio * 100).toFixed(1)}%`,
     threshold: `≤ ${(cap * 100).toFixed(0)}%`,
@@ -247,7 +247,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
   const adminRatio = sheet.outflow.admin / received;
   checks.push({
     key: "admin",
-    label: "운영비(일반관리비용) 비율",
+    label: "운영비 비율",
     level: adminRatio > POLICY.adminRatioBad ? "위반" : adminRatio > POLICY.adminRatioWarn ? "주의" : "양호",
     value: `${(adminRatio * 100).toFixed(1)}%`,
     threshold: `≤ ${(POLICY.adminRatioBad * 100).toFixed(0)}% (주의 ${(POLICY.adminRatioWarn * 100).toFixed(0)}%)`,
@@ -261,7 +261,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
   const programShare = spent > 0 ? sheet.outflow.program / spent : 1;
   checks.push({
     key: "program",
-    label: "사업수행비용 비중 (총지출 대비)",
+    label: "쓴 돈 중 수혜자에게 간 비율",
     level: spent === 0 ? "양호" : programShare < POLICY.programShareMin ? "위반" : programShare < POLICY.programShareGood ? "주의" : "양호",
     value: spent === 0 ? "집행 전" : `${(programShare * 100).toFixed(1)}%`,
     threshold: `≥ ${(POLICY.programShareMin * 100).toFixed(0)}% (권장 ${(POLICY.programShareGood * 100).toFixed(0)}%)`,
@@ -277,7 +277,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
   const balanceRatio = sheet.outflow.balance / received;
   checks.push({
     key: "balance",
-    label: "미집행 잔액 (모집 종료 후)",
+    label: "남은 돈 (모집 종료 후)",
     level: !ended ? "양호" : balanceRatio > POLICY.balanceAfterEndBad ? "위반" : balanceRatio > POLICY.balanceAfterEndWarn ? "주의" : "양호",
     value: `${(balanceRatio * 100).toFixed(1)}%`,
     threshold: ended ? `≤ ${(POLICY.balanceAfterEndWarn * 100).toFixed(0)}%` : "모집 중(해당 없음)",
@@ -332,7 +332,7 @@ export function evaluateHealth(campaign: Campaign, sheet: BalanceSheet, now = ne
   const missedCompletion = statutory && ended && daysSinceEnd > STATUTE.completionReportDays && campaign.lastDisclosedAt < campaign.endDate;
   checks.push({
     key: "disclosure",
-    label: statutory ? "공개주기·모집완료 보고" : "공개주기 준수",
+    label: statutory ? "사용 내역 공개·모집완료 보고" : "사용 내역 공개",
     level: missedCompletion ? "위반" : cycleLevel,
     value: `마지막 공개 ${daysSince}일 전`,
     threshold: statutory && ended ? `${campaign.disclosureCycleDays}일마다 · 종료 후 ${STATUTE.completionReportDays}일 내 완료보고` : `${campaign.disclosureCycleDays}일마다`,

@@ -25,7 +25,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ id: s
         <h1 className="text-2xl font-bold tracking-tight">{cat.category.name}</h1>
         <p className="mt-1 text-sm text-muted">{cat.category.description}</p>
         <p className="mt-2 text-sm">
-          모집건 {cat.campaigns.length}개 · 기부받은 돈 <strong className="tnum">{won(cat.sheet.inflow.total)}</strong> · 기부됨 <strong className="tnum">{won(cat.sheet.outflow.program)}</strong>
+          모집건 {cat.campaigns.length}개 · 기부받은 돈 <strong className="tnum">{won(cat.sheet.inflow.total)}</strong> · 수혜자에게 간 돈 <strong className="tnum">{won(cat.sheet.outflow.program)}</strong>
         </p>
       </header>
 

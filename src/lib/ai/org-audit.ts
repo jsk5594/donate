@@ -7,6 +7,7 @@
  */
 
 import { won, pct } from "../format";
+import { LEVEL_TEXT } from "../terms";
 import { getOrganization, ORGANIZATIONS, type Organization } from "../org-data";
 import { getRepository } from "../repository";
 import { fundraisingCapLabel, isStatutory, legalFundraisingCap, POLICY, SCORE_BANDS } from "../rules";
@@ -134,13 +135,13 @@ export function gradeOf(score: number): TrustGrade {
 export function signalsOf(m: OrgMetrics): OrgSignal[] {
   const lv = (bad: boolean, warn: boolean): HealthLevel => (bad ? "위반" : warn ? "주의" : "양호");
   return [
-    { key: "program", label: "최근 사업수행비용 비중 (총지출 대비)", level: lv(m.latestProgramShare < POLICY.programShareMin, m.latestProgramShare < POLICY.programShareGood), value: `${pct(m.latestProgramShare)} (수입 대비 ${pct(m.latestProgram)})`, basis: "BBB 65% 이상 · 권장 75%" },
+    { key: "program", label: "최근 쓴 돈 중 수혜자에게 간 비율", level: lv(m.latestProgramShare < POLICY.programShareMin, m.latestProgramShare < POLICY.programShareGood), value: `${pct(m.latestProgramShare)} (수입 대비 ${pct(m.latestProgram)})`, basis: "BBB 65% 이상 · 권장 75%" },
     { key: "admin", label: "최근 운영비 비율", level: lv(m.latestAdmin > POLICY.adminRatioBad, m.latestAdmin > POLICY.adminRatioWarn), value: `${pct(m.latestAdmin)} (5년 ${m.adminTrend >= 0 ? "+" : ""}${(m.adminTrend * 100).toFixed(1)}%p)`, basis: "운영 세칙 10% 이하" },
-    { key: "fundraising", label: `모금비용 ${fundraisingCapLabel(m.basis)} 초과`, level: lv(m.fundraisingOverCapYears >= 2, m.fundraisingOverCapYears === 1), value: `${m.fundraisingOverCapYears}개 연도 (최고 ${pct(m.maxFundraising)})`, basis: isStatutory(m.basis) ? "기부금품법 제13조·시행령" : `세칙 제2조의2 (제13조 비율 준용 · ${m.basis.legalBasis})` },
+    { key: "fundraising", label: `모금에 쓴 돈 ${fundraisingCapLabel(m.basis)} 초과`, level: lv(m.fundraisingOverCapYears >= 2, m.fundraisingOverCapYears === 1), value: `${m.fundraisingOverCapYears}개 연도 (최고 ${pct(m.maxFundraising)})`, basis: isStatutory(m.basis) ? "기부금품법 제13조·시행령" : `세칙 제2조의2 (제13조 비율 준용 · ${m.basis.legalBasis})` },
     { key: "disclosure", label: "결산 공시 지연", level: lv(m.maxDelay > 30, m.maxDelay > 14), value: `평균 ${m.avgDelay.toFixed(0)}일 · 최장 ${m.maxDelay}일`, basis: "기부금품법 제14조 공개의무" },
     { key: "audit", label: "외부감사 의견", level: lv(m.qualifiedAudits >= 2, m.qualifiedAudits === 1 || m.missingAudits >= 2), value: `한정 이하 ${m.qualifiedAudits}회 · 미실시 ${m.missingAudits}회`, basis: "공익법인 외부회계감사" },
     { key: "issues", label: "행정처분·지적", level: lv(m.majorIssues > 0, m.minorIssues > 0), value: `중대 ${m.majorIssues}건 · 경미 ${m.minorIssues}건`, basis: "관할청 처분·공시 정정 이력" },
-    { key: "carryover", label: "최근 연도 이월 잔액", level: lv(m.latestCarryover > POLICY.balanceAfterEndBad, m.latestCarryover > POLICY.balanceAfterEndWarn), value: pct(m.latestCarryover), basis: "모집 종료 후 잔액 30% 이하 권장" },
+    { key: "carryover", label: "최근 연도 남은 돈(이월)", level: lv(m.latestCarryover > POLICY.balanceAfterEndBad, m.latestCarryover > POLICY.balanceAfterEndWarn), value: pct(m.latestCarryover), basis: "모집 종료 후 잔액 30% 이하 권장" },
   ];
 }
 
@@ -257,7 +258,7 @@ function demoOpinion(org: Organization, m: OrgMetrics): OrgAuditOpinion {
     risks.push({ title: "운영비 비중이 높습니다", evidence: `${last.year}년 운영비 ${pct(m.latestAdmin)} (세칙 한도 10%), ${m.years}년간 ${(m.adminTrend * 100).toFixed(1)}%p 증가` });
   if (m.fundraisingOverCapYears > 0) {
     const over = ys.filter((y) => y.fundraising / y.received > legalFundraisingCap(y.received)).map((y) => `${y.year}년 ${pct(y.fundraising / y.received)}`);
-    risks.push({ title: `모금비용이 ${fundraisingCapLabel(m.basis)}를 ${m.fundraisingOverCapYears}번 넘었습니다`, evidence: `${over.join(", ")}. 처분 뒤에도 다시 발생` });
+    risks.push({ title: `모금에 쓴 돈이 ${fundraisingCapLabel(m.basis)}를 ${m.fundraisingOverCapYears}번 넘었습니다`, evidence: `${over.join(", ")}. 처분 뒤에도 다시 발생` });
   }
   if (m.maxDelay > 14) risks.push({ title: "결산 공시가 늦어지고 있습니다", evidence: `공시 지연 ${ys.map((y) => `${y.year}년 ${y.disclosureDelayDays}일`).join(" → ")}` });
   if (m.qualifiedAudits > 0) risks.push({ title: "외부감사에서 '한정' 의견을 받았습니다", evidence: ys.filter((y) => y.auditOpinion === "한정" || y.auditOpinion === "부적정").map((y) => `${y.year}년 ${y.auditOpinion}`).join(", ") });
@@ -281,7 +282,7 @@ function demoOpinion(org: Organization, m: OrgMetrics): OrgAuditOpinion {
     `${first.year}~${last.year}년 ${m.years}년간 총 ${won(m.totalReceived)}을 모금했고, 평균 ${pct(m.avgProgram)}를 사업에 썼습니다. ` +
     `최근 연도 기준 사업비 ${pct(m.latestProgram)}, 운영비 ${pct(m.latestAdmin)}입니다.` +
     pattern +
-    (m.currentCampaigns.length ? ` 현재 진행 중인 모집건 판정은 ${m.currentCampaigns.map((c) => `${c.title}(${c.score === null ? "진행 예정" : `${c.score}점 ${c.health}`})`).join(", ")}입니다.` : "");
+    (m.currentCampaigns.length ? ` 현재 진행 중인 모집건 판정은 ${m.currentCampaigns.map((c) => `${c.title}(${c.score === null ? "진행 예정" : `${c.score}점 ${LEVEL_TEXT[c.health]}`})`).join(", ")}입니다.` : "");
 
   const advice =
     grade === "신뢰 가능"

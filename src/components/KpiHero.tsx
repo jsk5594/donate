@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { HeroExpand } from "./HeroExpand";
 import { pct, won } from "@/lib/format";
 import type { HealthLevel } from "@/lib/types";
+import { Term } from "@/components/Term";
+import { LEVEL_TEXT } from "@/lib/terms";
 
 export interface YearSummary {
   year: number;
@@ -23,10 +25,10 @@ const LEVEL_COLOR: Record<HealthLevel, string> = { 양호: "#5BD39A", 주의: "#
 export function KpiHero({ y, children }: { y: YearSummary; children?: ReactNode }) {
   const total = Math.max(y.received, y.program + y.admin + y.fundraising) || 1;
   const parts = [
-    { label: "기부됨", value: y.program, color: "var(--out-program)" },
+    { label: "수혜자에게 간 돈", value: y.program, color: "var(--out-program)" },
     { label: "운영비", value: y.admin, color: "var(--out-admin)" },
-    { label: "모금비용", value: y.fundraising, color: "var(--out-fundraising)" },
-    { label: "잔액", value: y.balance, color: "var(--out-balance)" },
+    { label: "모금에 쓴 돈", value: y.fundraising, color: "var(--out-fundraising)" },
+    { label: "남은 돈", value: y.balance, color: "var(--out-balance)" },
   ];
   const r = 54;
   const C = 2 * Math.PI * r;
@@ -42,13 +44,13 @@ export function KpiHero({ y, children }: { y: YearSummary; children?: ReactNode 
     <div className="grid gap-6 md:grid-cols-[minmax(0,1.15fr)_1fr_1fr] md:items-center md:gap-8">
       {/* 핵심: 종합 기부투명도지수 — 칸 가운데 정렬, 오른쪽 구분선 */}
       <div className="flex flex-col items-center md:border-r md:border-white/10 md:pr-8">
-        <div className="mb-2 text-base font-semibold text-white">{y.year}년 종합 기부투명도지수</div>
+        <div className="mb-2 text-base font-semibold text-white">{y.year}년 종합 <Term k="score" /></div>
         <div className="flex items-center gap-5">
           <svg
             viewBox="0 0 140 140"
             className="h-[180px] w-[180px] shrink-0 xl:h-[210px] xl:w-[210px]"
             role="img"
-            aria-label={`${y.year}년 종합 기부투명도지수 ${y.score}점(${y.level}). 사용 비율: ${parts.map((p) => `${p.label} ${pct(p.value / total, 0)}`).join(", ")}`}
+            aria-label={`${y.year}년 종합 투명도 점수 ${y.score}점(${LEVEL_TEXT[y.level]}). 사용 비율: ${parts.map((p) => `${p.label} ${pct(p.value / total, 0)}`).join(", ")}`}
           >
             <circle cx="70" cy="70" r={r} fill="none" stroke="#2A3745" strokeWidth="18" />
             {parts.map((p) => {
@@ -64,7 +66,7 @@ export function KpiHero({ y, children }: { y: YearSummary; children?: ReactNode 
               </tspan>
             </text>
             <text x="70" y="93" textAnchor="middle" fill={LEVEL_COLOR[y.level]} fontSize="14" fontWeight="700">
-              {y.level}
+              {LEVEL_TEXT[y.level]}
             </text>
           </svg>
           <ul className="space-y-2 text-sm">

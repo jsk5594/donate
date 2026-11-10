@@ -20,10 +20,10 @@ export function segmentsOf(sheet: BalanceSheet): Segment[] {
     { key: "corporate", side: "in", label: "기업 기부", sub: "법인·사업자 입금", color: "var(--in-corporate)", amount: sheet.inflow.corporate },
     { key: "group", side: "in", label: "단체 기부", sub: "모임·협회·종교단체", color: "var(--in-group)", amount: sheet.inflow.group },
     { key: "other", side: "in", label: "이자 등 기타수입", sub: "전용계좌 이자수익", color: "var(--in-other)", amount: sheet.inflow.other },
-    { key: "program", side: "out", label: "기부됨 (사업수행비용)", sub: "수혜자에게 전달·사업 현장 집행", color: "var(--out-program)", amount: sheet.outflow.program },
-    { key: "admin", side: "out", label: "운영비 (일반관리비용)", sub: "인건비·임차·회계감사·통신", color: "var(--out-admin)", amount: sheet.outflow.admin },
-    { key: "fundraising", side: "out", label: "모금비용", sub: "홍보·결제수수료·문자·행사", color: "var(--out-fundraising)", amount: sheet.outflow.fundraising },
-    { key: "balance", side: "out", label: "미집행 잔액", sub: "다음 공개주기로 이월", color: "var(--out-balance)", amount: sheet.outflow.balance },
+    { key: "program", side: "out", label: "수혜자에게 간 돈", sub: "사업수행비용: 수혜자 전달·사업 현장 집행", color: "var(--out-program)", amount: sheet.outflow.program },
+    { key: "admin", side: "out", label: "운영비", sub: "일반관리비용: 인건비·임차·회계감사·통신", color: "var(--out-admin)", amount: sheet.outflow.admin },
+    { key: "fundraising", side: "out", label: "모금에 쓴 돈", sub: "모금비용: 홍보·결제수수료·문자·행사", color: "var(--out-fundraising)", amount: sheet.outflow.fundraising },
+    { key: "balance", side: "out", label: "남은 돈", sub: "미집행 잔액: 다음 공개 때 이월", color: "var(--out-balance)", amount: sheet.outflow.balance },
   ];
 }
 
@@ -41,8 +41,8 @@ export function BalanceSheetChart({ sheet, selected, onSelect, height = 380, com
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
-      <Column side="in" title="기부받은 돈 (차변)" caption="누가 보냈나" segs={segs} sheet={sheet} total={total} height={height} selected={selected} compact={compact} onSelect={onSelect} />
-      <Column side="out" title="쓰인 돈 + 잔액 (대변)" caption="어디에 갔나" segs={segs} sheet={sheet} total={total} height={height} selected={selected} compact={compact} onSelect={onSelect} />
+      <Column side="in" title="들어온 돈" caption="누가 보냈나" segs={segs} sheet={sheet} total={total} height={height} selected={selected} compact={compact} onSelect={onSelect} />
+      <Column side="out" title="나간 돈 + 남은 돈" caption="어디에 갔나" segs={segs} sheet={sheet} total={total} height={height} selected={selected} compact={compact} onSelect={onSelect} />
     </div>
   );
 }

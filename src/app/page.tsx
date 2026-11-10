@@ -102,7 +102,7 @@ export default async function HomePage() {
             전체 보기 →
           </Link>
         </header>
-        <p className="shrink-0 border-b border-line bg-[#F7F8FA] px-5 py-2 text-xs text-muted">집행이 끝나지 않은 모집건 중 기부투명도지수 80점 미만</p>
+        <p className="shrink-0 border-b border-line bg-[#F7F8FA] px-5 py-2 text-xs text-muted">집행이 끝나지 않은 모집건 중 투명도 점수 80점 미만</p>
         {flagged.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-muted">지금 확인이 필요한 모집건이 없습니다.</p>
         ) : (

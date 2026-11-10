@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BalanceExplorer } from "@/components/BalanceExplorer";
+import { Term } from "@/components/Term";
+import { EXPENSE_TYPE_LABEL } from "@/lib/terms";
 import { HealthChecks } from "@/components/HealthChecks";
 import { ScoreBadge, StatusBadge } from "@/components/HealthBadge";
 import { fmtDate, pct, won } from "@/lib/format";
@@ -48,7 +50,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
           <p className="mt-1 max-w-3xl text-sm text-foreground/80">{campaign.purpose}</p>
           <p className="mt-1 text-xs text-muted">
             모집기간 {fmtDate(campaign.startDate)} ~ {fmtDate(campaign.endDate)}
-            {campaign.completedAt && <> · 집행 완료 {fmtDate(campaign.completedAt)}</>} · 공개주기 {campaign.disclosureCycleDays}일 · 마지막 공개 {fmtDate(campaign.lastDisclosedAt)}
+            {campaign.completedAt && <> · 집행 완료 {fmtDate(campaign.completedAt)}</>} · 사용 내역 공개 {campaign.disclosureCycleDays}일마다 · 마지막 공개 {fmtDate(campaign.lastDisclosedAt)}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -68,10 +70,10 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Kpi label="기부받은 돈" value={won(sheet.inflow.total)} sub={`목표 대비 ${pct(goalRate(sheet, campaign.goal), 0)} · ${detail.donationCount}건`} />
-        <Kpi label="기부됨 (사업수행비용)" value={won(sheet.outflow.program)} sub={`${pct(sheet.outflow.program / t)} · 1만원당 ${per10k.toLocaleString("ko-KR")}원`} accent="var(--out-program)" />
-        <Kpi label="운영비 (일반관리비용)" value={won(sheet.outflow.admin)} sub={`${pct(sheet.outflow.admin / t)} · 세칙 한도 10%`} accent="var(--out-admin)" />
-        <Kpi label="모금비용" value={won(sheet.outflow.fundraising)} sub={`${pct(sheet.outflow.fundraising / t)} · ${fundraisingCapLabel(campaign)} ${pct(cap, 0)}`} accent="var(--out-fundraising)" />
-        <Kpi label="미집행 잔액" value={won(sheet.outflow.balance)} sub={campaign.status === "완료" ? "전액 집행 완료" : `${pct(sheet.outflow.balance / t)} · 계좌 잔액 일치`} accent="var(--out-balance)" />
+        <Kpi label={<Term k="program" />} value={won(sheet.outflow.program)} sub={`${pct(sheet.outflow.program / t)} · 1만원당 ${per10k.toLocaleString("ko-KR")}원`} accent="var(--out-program)" />
+        <Kpi label={<Term k="admin" />} value={won(sheet.outflow.admin)} sub={`${pct(sheet.outflow.admin / t)} · 세칙 한도 10%`} accent="var(--out-admin)" />
+        <Kpi label={<Term k="fundraising" />} value={won(sheet.outflow.fundraising)} sub={`${pct(sheet.outflow.fundraising / t)} · ${fundraisingCapLabel(campaign)} ${pct(cap, 0)}`} accent="var(--out-fundraising)" />
+        <Kpi label={<Term k="balance" />} value={won(sheet.outflow.balance)} sub={campaign.status === "완료" ? "전액 집행 완료" : `${pct(sheet.outflow.balance / t)} · 계좌 잔액 일치`} accent="var(--out-balance)" />
       </section>
 
       <section className="rounded-xl border border-line bg-card p-5">
@@ -115,7 +117,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
                 <span className="min-w-0">
                   <span className="font-semibold">{e.description}</span>{" "}
                   <span className="text-xs text-muted">
-                    {e.type} · {e.statName} · {fmtDate(e.spentAt)} · {e.receiptId}
+                    {EXPENSE_TYPE_LABEL[e.type]} · {e.statName} · {fmtDate(e.spentAt)} · {e.receiptId}
                   </span>
                 </span>
                 <span className="shrink-0 font-semibold tnum">{won(e.amount)}</span>
@@ -191,7 +193,7 @@ function DonorNotice({ campaign, sheet, org }: { campaign: Campaign; sheet: Bala
   );
 }
 
-function Kpi({ label, value, sub, accent }: { label: string; value: string; sub: string; accent?: string }) {
+function Kpi({ label, value, sub, accent }: { label: React.ReactNode; value: string; sub: string; accent?: string }) {
   return (
     <div className="rounded-xl border border-line bg-card p-4">
       <div className="flex items-center gap-2 text-xs text-muted">

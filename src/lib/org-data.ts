@@ -72,7 +72,7 @@ export const ORGANIZATIONS: Organization[] = [
       [2025, 2.3, 0.62, 0.13, 0.05, 400, 48, "한정"],
     ]),
     issues: [
-      { year: 2024, severity: "경미", title: "관할청 개선권고 — 일반관리비 비중 과다(11.5%)", source: "관할청 지도점검 결과" },
+      { year: 2024, severity: "경미", title: "관할청 개선권고: 운영비 비중 과다(11.5%)", source: "관할청 지도점검 결과" },
       { year: 2025, severity: "경미", title: "결산서류 공시 기한 48일 경과", source: "공익법인 공시 이력" },
     ],
   },
@@ -91,8 +91,8 @@ export const ORGANIZATIONS: Organization[] = [
       [2025, 1.3, 0.58, 0.06, 0.17, 1600, 20, "한정"],
     ]),
     issues: [
-      { year: 2023, severity: "중대", title: "모집비용 법정 한도(15%) 초과 — 시정명령", source: "기부금품 모집 관할청 처분" },
-      { year: 2024, severity: "중대", title: "모집비용 한도 초과 재발(18%) — 과태료 부과", source: "기부금품 모집 관할청 처분" },
+      { year: 2023, severity: "중대", title: "모집비용 법정 한도(15%) 초과로 시정명령", source: "기부금품 모집 관할청 처분" },
+      { year: 2024, severity: "중대", title: "모집비용 한도 초과 재발(18%)로 과태료 부과", source: "기부금품 모집 관할청 처분" },
     ],
   },
   {
@@ -110,7 +110,7 @@ export const ORGANIZATIONS: Organization[] = [
       [2024, 5.2, 0.8, 0.04, 0.02, 760, 0, "적정"],
       [2025, 7.0, 0.52, 0.04, 0.02, 610, 5, "적정"],
     ]),
-    issues: [{ year: 2025, severity: "경미", title: "산불 모금 종료 후 미집행 잔액 42% 이월 — 집행계획 제출 요구", source: "관할청 사후관리" }],
+    issues: [{ year: 2025, severity: "경미", title: "산불 모금 종료 후 남은 돈 42% 이월, 집행계획 제출 요구", source: "관할청 사후관리" }],
   },
   {
     id: "hankki",
@@ -174,7 +174,7 @@ export const ORGANIZATIONS: Organization[] = [
       [2024, 1.3, 0.81, 0.05, 0.05, 270, 0, "적정"],
       [2025, 1.2, 0.8, 0.05, 0.05, 260, 3, "적정"],
     ]),
-    issues: [{ year: 2022, severity: "경미", title: "기부금영수증 발급 오류(12건) — 자진 정정", source: "국세청 공시 정정 이력" }],
+    issues: [{ year: 2022, severity: "경미", title: "기부금영수증 발급 오류(12건) 자진 정정", source: "국세청 공시 정정 이력" }],
   },
   {
     id: "gb-relief",

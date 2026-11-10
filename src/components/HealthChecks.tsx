@@ -3,6 +3,7 @@ import { HealthBadge } from "./HealthBadge";
 import { TransparencyIndex } from "./TransparencyIndex";
 import { CHECK_COUNT } from "@/lib/rules";
 import type { CampaignHealth } from "@/lib/types";
+import { Term } from "@/components/Term";
 
 export function HealthChecks({ health }: { health: CampaignHealth }) {
   return (
@@ -10,7 +11,7 @@ export function HealthChecks({ health }: { health: CampaignHealth }) {
       <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line px-5 py-4">
         <div>
           <h2 className="text-base font-bold">운영 세칙 판정</h2>
-          <p className="mt-0.5 text-xs text-muted">{CHECK_COUNT}개 항목 점수의 합이 기부투명도지수입니다.</p>
+          <p className="mt-0.5 text-xs text-muted">{CHECK_COUNT}개 기준 점수의 합이 <Term k="score" />입니다.</p>
         </div>
         {health.score !== null && (
           <div className="w-full sm:w-72">
@@ -36,7 +37,7 @@ export function HealthChecks({ health }: { health: CampaignHealth }) {
               <div className="text-xs text-muted">기준 {c.threshold}</div>
             </div>
             {c.maxPoints > 0 && (
-              <div className="w-16 text-right text-sm tnum" title="기부투명도지수 항목 점수 / 배점">
+              <div className="w-16 text-right text-sm tnum" title="투명도 점수 중 이 기준의 점수 / 배점">
                 <span className="font-bold">{Math.round(c.points * 10) / 10}</span>
                 <span className="text-xs text-muted"> / {c.maxPoints}</span>
               </div>

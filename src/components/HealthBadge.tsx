@@ -1,3 +1,4 @@
+import { LEVEL_TEXT } from "@/lib/terms";
 import { stageOf, type CampaignStatus, type HealthLevel, type Stage } from "@/lib/types";
 
 const STYLE: Record<HealthLevel, string> = {
@@ -11,14 +12,14 @@ export function ScoreBadge({ score, level, size = "sm", compact = false }: { sco
   if (score === null) return null;
   return (
     <span
-      title={`기부투명도지수 ${score}점 (${level})`}
+      title={`투명도 점수 ${score}점 (${LEVEL_TEXT[level]}). 원래 용어: 기부투명도지수`}
       className={`inline-flex shrink-0 items-baseline gap-1 whitespace-nowrap rounded-full font-semibold ${STYLE[level]} ${size === "md" ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-xs"}`}
     >
       <span className="font-bold tnum">{score}</span>
       {compact ? null : (
         <>
           <span className="opacity-70">점</span>
-          <span>· {level}</span>
+          <span>· {LEVEL_TEXT[level]}</span>
         </>
       )}
     </span>
@@ -27,8 +28,8 @@ export function ScoreBadge({ score, level, size = "sm", compact = false }: { sco
 
 export function HealthBadge({ level, size = "sm" }: { level: HealthLevel; size?: "sm" | "md" }) {
   return (
-    <span className={`inline-flex items-center rounded-full font-semibold ${STYLE[level]} ${size === "md" ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-xs"}`}>
-      {level}
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full font-semibold ${STYLE[level]} ${size === "md" ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-xs"}`}>
+      {LEVEL_TEXT[level]}
     </span>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BalanceSheetChart, segmentsOf, type SegmentKey } from "./BalanceSheetChart";
 import { fmtDate, fmtDateTime, pct, won } from "@/lib/format";
 import type { BalanceSheet, PublicDonation, PublicExpense } from "@/lib/types";
+import { Term } from "@/components/Term";
 
 interface Props {
   sheet: BalanceSheet;
@@ -43,7 +44,7 @@ export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, ca
 
         {!seg && (
           <div className="rounded-xl border border-dashed border-line bg-card px-5 py-4 text-sm text-muted">
-            그래프의 항목(막대 또는 범례)을 클릭하면 누가 얼마를 기부했는지, 어떤 통계목으로 얼마를 썼는지 카드로 펼쳐집니다.
+            그래프의 항목(막대 또는 범례)을 클릭하면 누가 얼마를 기부했는지, 어떤 지출 항목으로 얼마를 썼는지 카드로 펼쳐집니다.
           </div>
         )}
       </div>
@@ -75,7 +76,7 @@ export function BalanceExplorer({ sheet, donations, expenses, campaignTitles, ca
             {seg.key === "balance" && (
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-lg bg-[#F3F5F8] p-4">
-                  <div className="text-xs text-muted">미집행 잔액</div>
+                  <div className="text-xs text-muted"><Term k="balance" /></div>
                   <div className="mt-1 text-xl font-bold tnum">{won(sheet.outflow.balance)}</div>
                   <div className="mt-1 text-xs text-muted">기부받은 돈의 {pct(sheet.outflow.balance / (sheet.inflow.total || 1))}</div>
                 </div>
@@ -169,10 +170,10 @@ function ExpenseCards({ expenses, total, campaignTitles, openStat, onToggle }: {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="지출 건수" value={`${expenses.length.toLocaleString("ko-KR")}건`} />
         <Stat label="합계" value={won(total)} />
-        <Stat label="통계목 수" value={`${groups.length}개`} />
+        <Stat label="지출 항목 수" value={`${groups.length}개`} />
         <Stat label="증빙 공개" value="100%" />
       </div>
-      <p className="text-xs text-muted">통계목(공익법인회계기준 비용 분류 기준) 카드를 클릭하면 건별 지출 내역과 증빙번호가 펼쳐집니다.</p>
+      <p className="text-xs text-muted">지출 항목(공익법인회계기준의 통계목) 카드를 클릭하면 건별 지출 내역과 증빙번호가 펼쳐집니다.</p>
       <ul className="grid gap-3 md:grid-cols-2">
         {groups.map((g) => {
           const open = openStat === g.code;

@@ -100,17 +100,17 @@ export function MyDonations({ initialCode, initialResult }: { initialCode?: stri
             </div>
             <div className="mt-4">
               <div className="mb-1 text-xs font-semibold text-muted">내 기부금은 지금 어디에 있나 (모집건별 집행 비율로 비례 배분)</div>
-              <div className="flex h-4 overflow-hidden rounded-full bg-[#E9EDF3]" role="img" aria-label={`기부됨 ${pct(alloc.program / result.total)}, 운영비 ${pct(alloc.admin / result.total)}, 모금비용 ${pct(alloc.fundraising / result.total)}, 잔액 ${pct(alloc.balance / result.total)}`}>
+              <div className="flex h-4 overflow-hidden rounded-full bg-[#E9EDF3]" role="img" aria-label={`수혜자에게 간 돈 ${pct(alloc.program / result.total)}, 운영비 ${pct(alloc.admin / result.total)}, 모금비용 ${pct(alloc.fundraising / result.total)}, 잔액 ${pct(alloc.balance / result.total)}`}>
                 <div style={{ width: `${(alloc.program / result.total) * 100}%`, background: "var(--out-program)" }} />
                 <div style={{ width: `${(alloc.admin / result.total) * 100}%`, background: "var(--out-admin)" }} />
                 <div style={{ width: `${(alloc.fundraising / result.total) * 100}%`, background: "var(--out-fundraising)" }} />
                 <div style={{ width: `${(alloc.balance / result.total) * 100}%`, background: "var(--out-balance)" }} />
               </div>
               <ul className="mt-2 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
-                <Leg c="var(--out-program)" l="기부됨" v={alloc.program} />
+                <Leg c="var(--out-program)" l="수혜자에게 간 돈" v={alloc.program} />
                 <Leg c="var(--out-admin)" l="운영비" v={alloc.admin} />
-                <Leg c="var(--out-fundraising)" l="모금비용" v={alloc.fundraising} />
-                <Leg c="var(--out-balance)" l="미집행 잔액" v={alloc.balance} />
+                <Leg c="var(--out-fundraising)" l="모금에 쓴 돈" v={alloc.fundraising} />
+                <Leg c="var(--out-balance)" l="남은 돈" v={alloc.balance} />
               </ul>
             </div>
           </section>
@@ -130,9 +130,9 @@ export function MyDonations({ initialCode, initialResult }: { initialCode?: stri
                   <div className="text-lg font-bold tnum">{won(i.amount)}</div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                  <span>기부됨 <strong className="tnum">{won(i.allocation.program)}</strong></span>
+                  <span>수혜자에게 간 돈 <strong className="tnum">{won(i.allocation.program)}</strong></span>
                   <span>운영비 <strong className="tnum">{won(i.allocation.admin)}</strong></span>
-                  <span>모금비용 <strong className="tnum">{won(i.allocation.fundraising)}</strong></span>
+                  <span>모금에 쓴 돈 <strong className="tnum">{won(i.allocation.fundraising)}</strong></span>
                   <span>잔액 <strong className="tnum">{won(i.allocation.balance)}</strong></span>
                 </div>
                 {i.message && <div className="mt-2 rounded bg-[#F3F5F8] px-2 py-1 text-xs">내 메시지: “{i.message}”</div>}

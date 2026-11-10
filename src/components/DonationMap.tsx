@@ -8,6 +8,7 @@ import map from "@/lib/korea-map.json";
 import type { Sido } from "@/lib/regions";
 import { aggregateIndex } from "@/lib/rules";
 import { STAGES, type CampaignStatus, type HealthLevel, type Stage } from "@/lib/types";
+import { LEVEL_TEXT } from "@/lib/terms";
 
 export interface MapCampaign {
   id: string;
@@ -72,7 +73,7 @@ export function DonationMap({ items }: { items: MapCampaign[] }) {
   const maxBar = Math.max(1, ...map.regions.flatMap((r) => LEVELS.map(({ level }) => countLevel(listOf(r.id as Sido), level))));
   const summaryOf = (id: Sido) => {
     const list = listOf(id);
-    return judged ? LEVELS.map(({ level }) => `${level} ${countLevel(list, level)}건`).join(" · ") : `${stage} ${list.length}건`;
+    return judged ? LEVELS.map(({ level }) => `${LEVEL_TEXT[level]} ${countLevel(list, level)}건`).join(" · ") : `${stage} ${list.length}건`;
   };
   const nationwide = listOf(NATIONWIDE).length;
 
@@ -226,7 +227,7 @@ export function DonationMap({ items }: { items: MapCampaign[] }) {
               <>
                 {LEVELS.map(({ level, color }) => (
                   <span key={level} className="flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-sm" style={{ background: color }} aria-hidden="true" /> {level}
+                    <span className="h-3 w-3 rounded-sm" style={{ background: color }} aria-hidden="true" /> {LEVEL_TEXT[level]}
                   </span>
                 ))}
                 <span>막대 높이 = 건수</span>
@@ -261,7 +262,7 @@ function PlaceDetail({ place, name, stage, list, onClose }: { place: Place; name
         <>
           <dl className="grid shrink-0 grid-cols-3 gap-2 border-b border-line px-5 py-3 text-center">
             <Stat label="기부받은 돈" value={wonShort(received)} />
-            <Stat label="기부됨" value={wonShort(program)} />
+            <Stat label="수혜자에게 간 돈" value={wonShort(program)} />
             <Stat label="평균 지수" value={avg === null ? "—" : `${avg}점`} />
           </dl>
           {place !== NATIONWIDE && list.some((c) => c.sidos.length > 1) && <p className="shrink-0 border-b border-line bg-[#F7F8FA] px-5 py-2 text-xs text-muted">금액에는 다른 지역에 걸친 모집건의 전체 금액이 포함됩니다.</p>}

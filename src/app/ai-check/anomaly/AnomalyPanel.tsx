@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AiEngineBadge } from "@/components/AiEngineBadge";
+import { EXPENSE_TYPE_LABEL } from "@/lib/terms";
 import type { AnomalyAuditResult, AnomalyFinding, Severity } from "@/lib/ai/anomaly-audit";
 import type { PublicExpense } from "@/lib/types";
 
@@ -106,7 +107,7 @@ export function AnomalyPanel({ campaign, findings, expenses }: Props) {
                       {rows.map((e) => (
                         <tr key={e.id}>
                           <td className="py-1.5 pr-2 text-muted tnum">{kst(e.spentAt)}</td>
-                          <td className="py-1.5 pr-2">{e.type}</td>
+                          <td className="py-1.5 pr-2">{EXPENSE_TYPE_LABEL[e.type]}</td>
                           <td className="py-1.5 pr-2">
                             {e.description} <span className="text-muted">· {e.vendor}</span>
                           </td>

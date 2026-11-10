@@ -73,7 +73,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-semibold">{s.campaign.title} 기부금 결산 공개보고서</span>
                   <span className="block text-xs text-muted">
-                    {s.campaign.organizer} · 기부받은 돈 {won(s.sheet.inflow.total)} · 기부됨 {won(s.sheet.outflow.program)}
+                    {s.campaign.organizer} · 기부받은 돈 {won(s.sheet.inflow.total)} · 수혜자에게 간 돈 {won(s.sheet.outflow.program)}
                   </span>
                 </span>
                 <span className="text-right text-xs text-muted tnum">
@@ -98,7 +98,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               <Link href={`/campaigns/${s.campaign.id}`} className="min-w-0 flex-1 truncate hover:text-primary">
                 {s.campaign.title}
               </Link>
-              <span className="text-xs text-muted">미집행 잔액 {won(s.sheet.outflow.balance)}</span>
+              <span className="text-xs text-muted">남은 돈 {won(s.sheet.outflow.balance)}</span>
             </li>
           ))}
         </ul>

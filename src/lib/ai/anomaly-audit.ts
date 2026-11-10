@@ -6,6 +6,7 @@
  */
 import { SPLIT_THRESHOLD, type AnomalyKind } from "../audit-plants";
 import { won } from "../format";
+import { EXPENSE_TYPE_LABEL } from "../terms";
 import { getAuditTruth } from "../mock-data";
 import { getRepository } from "../repository";
 import type { Campaign, PublicExpense } from "../types";
@@ -21,7 +22,7 @@ export const KIND_INFO: Record<AnomalyKind, { label: string; severity: Severity;
   outOfPeriod: { label: "사업기간 밖 지출", severity: "높음", rule: "모집 시작일 전이나 집행 완료일 뒤에 처리된 지출" },
   roundRepeat: { label: "정액 반복 지급", severity: "중간", rule: "같은 거래처에 100만원 단위로 딱 떨어지는 금액을 3번 이상 지급(실비가 아닌 정액 지급 여부 확인)" },
   offHours: { label: "심야 처리 지출", severity: "중간", rule: "한국시간 22시~6시에 처리된 지출" },
-  vendorConcentration: { label: "거래처 집중", severity: "중간", rule: "외부 거래처 한 곳이 사업수행비용의 40% 이상(3건 이상)을 차지" },
+  vendorConcentration: { label: "거래처 집중", severity: "중간", rule: "외부 거래처 한 곳이 수혜자에게 간 돈(사업비)의 40% 이상(3건 이상)을 차지" },
   amountOutlier: { label: "고액 이상치", severity: "낮음", rule: "같은 모집건·같은 비용 유형 지출 중앙값의 4배 이상이면서 1,000만원 이상" },
 };
 
@@ -104,7 +105,7 @@ export function detectAnomalies(campaign: Campaign, expenses: PublicExpense[]): 
   // 5. 심야 처리
   for (const e of expenses) {
     const h = kstHour(e.spentAt);
-    if (h >= 22 || h < 6) add("offHours", [e], `${kstDate(e.spentAt)} ${kstTime(e.spentAt)}(한국시간) ${e.type} · ${e.description} ${won(e.amount)}`);
+    if (h >= 22 || h < 6) add("offHours", [e], `${kstDate(e.spentAt)} ${kstTime(e.spentAt)}(한국시간) ${EXPENSE_TYPE_LABEL[e.type]} · ${e.description} ${won(e.amount)}`);
   }
 
   // 6. 사업기간 밖

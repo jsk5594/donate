@@ -27,7 +27,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <h1 className="text-lg font-bold">{campaign.title}</h1>
           </div>
           <p className="mt-3 text-sm text-foreground/85">
-            아직 집행이 끝나지 않은 모집건입니다. 집행이 완료되면 AI가 결산 보고서를 자동으로 작성해 게시합니다. 현재 미집행 잔액은 {won(detail.sheet.outflow.balance)}입니다.
+            아직 집행이 끝나지 않은 모집건입니다. 집행이 완료되면 AI가 결산 보고서를 자동으로 작성해 게시합니다. 현재 남은 돈은 {won(detail.sheet.outflow.balance)}입니다.
           </p>
           <Link href={`/campaigns/${campaign.id}`} className="mt-4 inline-block rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-[#F3F5F8]">
             지금까지의 대차대조표 보기

@@ -220,7 +220,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
                 <dd className="text-right font-semibold tnum">{won(spent)}</dd>
                 <dt className="text-muted">사업비 비중(총지출 대비)</dt>
                 <dd className="text-right tnum">{spent ? pct(tot.program / spent) : "—"}</dd>
-                <dt className="text-muted">미집행 잔액(현재)</dt>
+                <dt className="text-muted">남은 돈(현재)</dt>
                 <dd className="text-right tnum">{won(balance)}</dd>
               </dl>
             </div>
@@ -237,7 +237,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
                         <span className="text-base font-bold">{f.category.name}</span>
                         <span className="text-xs text-muted tnum">{f.rows.length}건</span>
                         <span className="text-sm text-muted">
-                          {f.category.description} · 기부받은 돈 {wonShort(fr)} · 기부됨 {wonShort(fp)}
+                          {f.category.description} · 기부받은 돈 {wonShort(fr)} · 수혜자에게 간 돈 {wonShort(fp)}
                         </span>
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" className="ml-auto shrink-0 text-muted transition-transform group-open:rotate-180">
                           <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -306,29 +306,9 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
   );
 }
 
+/** 페이지 제목 — 하위 화면 선택은 상단 메뉴 '기부 살펴보기'에서 함 */
 function StatusHeader({ tab }: { tab: "search" | "risk" }) {
-  const tabs = [
-    { key: "search", href: "/status", label: "기부 현황 조회", on: "bg-primary text-white", off: "text-muted hover:bg-primary-soft hover:text-primary" },
-    { key: "risk", href: "/status?tab=risk", label: "확인 필요 모집건", on: "bg-risk-orange text-risk-ink", off: "text-muted hover:bg-risk-hover hover:text-risk-ink" },
-  ] as const;
-  return (
-    <header className="flex">
-      <h1 className="sr-only">기부 현황</h1>
-      <nav className="flex flex-wrap gap-1 rounded-xl border border-line bg-card p-1" aria-label="기부 현황 보기">
-        {tabs.map((t) => (
-          <Link
-            key={t.key}
-            href={t.href}
-            scroll={false}
-            aria-current={tab === t.key ? "page" : undefined}
-            className={`rounded-lg px-5 py-1.5 text-2xl font-bold tracking-tight ${tab === t.key ? t.on : t.off}`}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
-    </header>
-  );
+  return <h1 className="text-2xl font-bold tracking-tight">{tab === "risk" ? "확인 필요 모집건" : "기부 현황 조회"}</h1>;
 }
 
 function FolderIcon() {
@@ -377,9 +357,9 @@ function Bar({ label, max, parts }: { label: string; max: number; parts: { v: nu
 function Legend() {
   const items = [
     { l: "기부받은 돈", c: COLORS.received },
-    { l: "기부됨(사업비)", c: COLORS.program },
+    { l: "수혜자에게 간 돈", c: COLORS.program },
     { l: "운영비", c: COLORS.admin },
-    { l: "모금비용", c: COLORS.fundraising },
+    { l: "모금에 쓴 돈", c: COLORS.fundraising },
   ];
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">

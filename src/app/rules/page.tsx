@@ -23,9 +23,9 @@ export default function RulesPage() {
       </header>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Rule title="모금비용" value="≤ 15%" sub="기부금품법 법정 한도(10억 이하 구간) · 제2장" />
+        <Rule title="모금에 쓴 돈" value="≤ 15%" sub="기부금품법 법정 한도(10억 이하 구간) · 제2장" />
         <Rule title="운영비" value="≤ 10%" sub="세칙 상한(주의 8%) · 제6장" />
-        <Rule title="사업수행비용" value="≥ 65%" sub="총지출 대비 하한(권장 75%) · 제5장" />
+        <Rule title="수혜자에게 간 비율" value="≥ 65%" sub="쓴 돈 대비 하한(권장 75%) · 제5장" />
         <Rule title="모집기간" value="≤ 1년" sub="1천만원 이상 사전등록 · 사용 2년 · 제9장" />
       </section>
 

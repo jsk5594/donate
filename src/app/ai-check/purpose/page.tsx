@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AuditTabs } from "@/components/AuditTabs";
 import { scanPurpose } from "@/lib/ai/purpose-audit";
 import { getRepository } from "@/lib/repository";
 import { PurposePanel } from "./PurposePanel";
@@ -19,18 +20,15 @@ export default async function PurposeAuditPage({ searchParams }: { searchParams:
 
   return (
     <div className="flex flex-col gap-6">
-      <nav className="text-xs text-muted" aria-label="경로">
-        <Link href="/organizations" className="hover:text-primary">AI 점검</Link> <span aria-hidden="true">›</span>{" "}
-        <Link href="/ai-check" className="hover:text-primary">AI 지출 점검</Link> <span aria-hidden="true">›</span> 모집 목적 부합 점검
-      </nav>
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">모집 목적 부합 점검</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted">기부금은 모집 목적에만 쓸 수 있습니다(기부금품법 제12조). 사업비로 잡힌 지출 중 모집 목적과 맞지 않거나, 운영비·모금비용을 사업비로 잡은 지출을 찾습니다.</p>
-      </header>
+      <AuditTabs active="purpose" />
+      <p className="-mt-2 max-w-3xl text-sm text-muted">
+        기부금은 모집 목적에만 쓸 수 있습니다(기부금품법 제12조). 수혜자에게 간 돈으로 잡힌 지출 중 모집 목적과 맞지 않거나, 운영비·모금에 쓴 돈을 사업비로 잡은 지출을 찾습니다. 점검 결과는 위법
+        판정이 아니며, 모집기관 소명과 등록청 확인을 거쳐 판단합니다.
+      </p>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="검토한 모집건" value={`${scan.rows.length}건`} sub="진행 예정 모집건 제외" />
-        <Kpi label="검토한 사업비 지출" value={`${scan.totalProgram.toLocaleString("ko-KR")}건`} sub="사업수행비용으로 잡힌 지출" />
+        <Kpi label="검토한 사업비 지출" value={`${scan.totalProgram.toLocaleString("ko-KR")}건`} sub="수혜자에게 간 돈으로 잡힌 지출" />
         <Kpi label="확인 필요 지출" value={`${flagged}건`} sub="모집건을 고르면 이유와 기관에 물어볼 질문을 볼 수 있습니다" tone={flagged ? "warn" : "ok"} />
         <Kpi label="해당 모집건" value={`${flaggedCampaigns}건`} sub="확인 필요 지출이 1건 이상인 모집건" />
       </section>

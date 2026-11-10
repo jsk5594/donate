@@ -5,6 +5,7 @@ import { fmtDate, pct, wonShort } from "@/lib/format";
 import { getRepository } from "@/lib/repository";
 import { aggregateIndex, CHECK_COUNT } from "@/lib/rules";
 import { stageOf, type CampaignSummary, type Stage } from "@/lib/types";
+import { LEVEL_TEXT } from "@/lib/terms";
 
 type Dir = "asc" | "desc";
 const yearOf = (iso: string) => new Date(iso).getFullYear();
@@ -105,15 +106,15 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
         </svg>
         <div className="min-w-0">
           <p className="text-lg font-bold text-risk-ink">
-            확인이 필요한 모집건 {count("위반") + count("주의")}건 <span className="text-sm font-semibold">· 위반 {count("위반")}건 · 주의 {count("주의")}건</span>
+            확인이 필요한 모집건 {count("위반") + count("주의")}건 <span className="text-sm font-semibold">· 기준 초과 {count("위반")}건 · 주의 {count("주의")}건</span>
           </p>
-          <p className="mt-0.5 text-sm text-foreground/80">모든 모집건을 운영 세칙 {CHECK_COUNT}개 항목으로 매일 점검합니다. 이 화면에는 위반과 주의 모집건만 보여 줍니다.{upcomingCount > 0 && ` 진행 예정 ${upcomingCount}건은 모집 시작 후 판정합니다.`}</p>
+          <p className="mt-0.5 text-sm text-foreground/80">모든 모집건을 운영 세칙 {CHECK_COUNT}개 항목으로 매일 점검합니다. 이 화면에는 기준 초과와 주의 모집건만 보여 줍니다.{upcomingCount > 0 && ` 진행 예정 ${upcomingCount}건은 모집 시작 후 판정합니다.`}</p>
         </div>
       </div>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <div className="rounded-xl bg-risk-amber p-4"><div className="text-xs font-semibold text-risk-ink">평균 기부투명도지수 (양호 포함)</div><div className="mt-1 text-2xl font-bold tnum">{avg ?? "—"}<span className="text-sm font-normal text-risk-ink"> / 100</span></div></div>
-        <div className="rounded-xl bg-risk-red p-4"><div className="text-xs font-semibold text-risk-ink">위반 (60점 미만)</div><div className="mt-1 text-2xl font-bold text-bad">{count("위반")}건</div></div>
+        <div className="rounded-xl bg-risk-amber p-4"><div className="text-xs font-semibold text-risk-ink">평균 투명도 점수 (통과 포함)</div><div className="mt-1 text-2xl font-bold tnum">{avg ?? "—"}<span className="text-sm font-normal text-risk-ink"> / 100</span></div></div>
+        <div className="rounded-xl bg-risk-red p-4"><div className="text-xs font-semibold text-risk-ink">기준 초과 (60점 미만)</div><div className="mt-1 text-2xl font-bold text-bad">{count("위반")}건</div></div>
         <div className="rounded-xl bg-risk-orange p-4"><div className="text-xs font-semibold text-risk-ink">주의 (60~79점)</div><div className="mt-1 text-2xl font-bold text-warn">{count("주의")}건</div></div>
       </section>
 
@@ -136,7 +137,7 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
           </div>
           {(
             <p className="text-xs text-muted">
-              기부됨·운영비·모금비용·잔액 비율은 기부받은 돈 대비입니다. {goodCount > 0 && `같은 조건의 양호 ${goodCount}건은 기부 현황 조회에서 볼 수 있습니다. `}
+              수혜자에게 간 돈·운영비·모금에 쓴 돈·남은 돈 비율은 기부받은 돈 대비입니다. {goodCount > 0 && `같은 조건의 통과 ${goodCount}건은 기부 현황 조회에서 볼 수 있습니다. `}
               {year !== null && "연도는 모집 시작부터 집행 완료까지의 기간이 걸친 모집건을 찾으며, 금액과 지수는 모집건 전체 기준입니다."}
             </p>
           )}
@@ -148,9 +149,9 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
                 <SortTh {...th("score")} className="px-4">투명도지수</SortTh>
                 <SortTh {...th("title")} className="px-4">모집건</SortTh>
                 <SortTh {...th("received")} right>기부받은 돈</SortTh>
-                <SortTh {...th("program")} right>기부됨</SortTh>
+                <SortTh {...th("program")} right>수혜자에게 간 돈</SortTh>
                 <SortTh {...th("admin")} right>운영비</SortTh>
-                <SortTh {...th("fundraising")} right>모금비용</SortTh>
+                <SortTh {...th("fundraising")} right>모금에 쓴 돈</SortTh>
                 <SortTh {...th("balance")} right>잔액</SortTh>
                 <SortTh {...th("disclosed")}>마지막 공개</SortTh>
                 <th className="px-4 py-2.5 font-semibold">판정 사유</th>
@@ -159,7 +160,7 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
             <tbody className="divide-y divide-risk-line">
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted">조건에 맞는 위반·주의 모집건이 없습니다.</td>
+                  <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted">조건에 맞는 기준 초과·주의 모집건이 없습니다.</td>
                 </tr>
               )}
               {rows.map((s) => {
@@ -179,7 +180,7 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
                     <td className={`px-3 py-3 text-right tnum ${levelStyle(s, "fundraising")}`}>{pct(s.sheet.outflow.fundraising / t)}</td>
                     <td className="px-3 py-3 text-right tnum">{pct(s.sheet.outflow.balance / t)}</td>
                     <td className="px-3 py-3 text-xs text-muted">{fmtDate(s.campaign.lastDisclosedAt)}</td>
-                    <td className="px-4 py-3 text-xs text-muted">{issues.map((c) => `[${c.level}] ${c.label} ${c.value}`).join(" / ")}</td>
+                    <td className="px-4 py-3 text-xs text-muted">{issues.map((c) => `[${LEVEL_TEXT[c.level]}] ${c.label} ${c.value}`).join(" / ")}</td>
                   </tr>
                 );
               })}

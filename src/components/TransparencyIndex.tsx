@@ -1,4 +1,6 @@
 import type { HealthLevel } from "@/lib/types";
+import { Term } from "@/components/Term";
+import { LEVEL_TEXT } from "@/lib/terms";
 
 const COLOR: Record<HealthLevel, string> = {
   양호: "var(--color-ok)",
@@ -11,16 +13,16 @@ export function TransparencyIndex({ score, level }: { score: number; level: Heal
   return (
     <div className="flex min-w-[220px] flex-col gap-1.5">
       <div className="flex items-baseline gap-2">
-        <span className="text-xs font-semibold text-muted">기부투명도지수</span>
+        <span className="text-xs font-semibold text-muted"><Term k="score" /></span>
         <span className="text-3xl font-bold tnum" style={{ color: COLOR[level] }}>
           {score}
         </span>
         <span className="text-sm text-muted">/ 100</span>
         <span className="ml-auto text-sm font-bold" style={{ color: COLOR[level] }}>
-          {level}
+          {LEVEL_TEXT[level]}
         </span>
       </div>
-      <div className="relative h-2.5 rounded-full bg-[#E9EDF3]" role="img" aria-label={`기부투명도지수 ${score}점, ${level}`}>
+      <div className="relative h-2.5 rounded-full bg-[#E9EDF3]" role="img" aria-label={`투명도 점수 ${score}점, ${LEVEL_TEXT[level]}`}>
         <div className="h-full rounded-full" style={{ width: `${score}%`, background: COLOR[level] }} />
         {/* 구간 경계: 60(위반|주의), 80(주의|양호) */}
         <span className="absolute inset-y-0 left-[60%] w-px bg-white" aria-hidden="true" />

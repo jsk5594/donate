@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AiEngineBadge } from "@/components/AiEngineBadge";
+import { EXPENSE_TYPE_LABEL } from "@/lib/terms";
 import type { PurposeAuditResult, PurposeVerdict } from "@/lib/ai/purpose-audit";
 import type { PublicExpense } from "@/lib/types";
 
@@ -96,7 +97,7 @@ export function PurposePanel({ campaign, expenses }: Props) {
                       <span className="ml-auto font-bold tnum">{won(e.amount)}</span>
                     </div>
                     <p className="mt-1.5 text-sm">{f.reason}</p>
-                    {f.suggestedType && <p className="mt-1 text-xs text-warn">맞는 분류는 {f.suggestedType}입니다. 바로잡으면 이 모집건의 사업비 비율이 낮아집니다.</p>}
+                    {f.suggestedType && <p className="mt-1 text-xs text-warn">맞는 분류는 &lsquo;{EXPENSE_TYPE_LABEL[f.suggestedType]}&rsquo;입니다. 바로잡으면 이 모집건의 &lsquo;수혜자에게 간 돈&rsquo; 비율이 낮아집니다.</p>}
                     {f.question && <p className="mt-1 text-xs text-muted">기관에 물어볼 질문: {f.question}</p>}
                   </li>
                 );
@@ -112,7 +113,7 @@ export function PurposePanel({ campaign, expenses }: Props) {
                   <tr className="border-y border-line bg-[#F7F8FA] text-left text-xs text-muted">
                     <th className="px-3 py-2 font-semibold">판정</th>
                     <th className="px-3 py-2 font-semibold">적요</th>
-                    <th className="px-3 py-2 font-semibold">거래처 · 통계목</th>
+                    <th className="px-3 py-2 font-semibold">거래처 · 지출 항목</th>
                     <th className="px-3 py-2 font-semibold">일자</th>
                     <th className="px-3 py-2 text-right font-semibold">금액</th>
                   </tr>

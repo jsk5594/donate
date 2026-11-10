@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { IndexTrend, TrendPoint } from "@/lib/index-trend";
+import { Term } from "@/components/Term";
 
 /** 항목 색: 검증된 범주형 팔레트 1~5번(고정 순서, 항목 순서대로 배정) */
 const SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"];
@@ -73,7 +74,7 @@ export function IndexTrendCard({ trend }: { trend: IndexTrend }) {
   return (
     <section className="rounded-xl border border-line bg-card">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-5">
-        <h2 className="text-base font-bold">완료 모집건 기부투명도지수 추이</h2>
+        <h2 className="text-base font-bold">완료 모집건 <Term k="score" /> 추이</h2>
         <span className="hidden text-xs text-muted sm:inline">완료 {trend.campaigns.length}건 · 각 시점까지의 원장으로 다시 판정</span>
       </header>
 
@@ -141,9 +142,9 @@ export function IndexTrendCard({ trend }: { trend: IndexTrend }) {
               </text>
             </g>
           ))}
-          <text x={PAD.left + innerW - 4} y={y(100) + 13} textAnchor="end" fontSize="10" fill="#6B7787">양호</text>
+          <text x={PAD.left + innerW - 4} y={y(100) + 13} textAnchor="end" fontSize="10" fill="#6B7787">통과</text>
           <text x={PAD.left + innerW - 4} y={y(80) + 13} textAnchor="end" fontSize="10" fill="#6B7787">주의</text>
-          <text x={PAD.left + innerW - 4} y={y(60) + 13} textAnchor="end" fontSize="10" fill="#6B7787">위반</text>
+          <text x={PAD.left + innerW - 4} y={y(60) + 13} textAnchor="end" fontSize="10" fill="#6B7787">기준 초과</text>
 
           {points.map((p, i) =>
             i % step === 0 || i === points.length - 1 ? (
@@ -194,7 +195,7 @@ export function IndexTrendCard({ trend }: { trend: IndexTrend }) {
         {/* 표 보기(화면낭독기). 표는 높이 제한을 무시하므로 sr-only는 감싸는 div에 줌 */}
         <div className="sr-only">
           <table>
-            <caption>기부투명도지수 추이</caption>
+            <caption>투명도 점수 추이</caption>
             <thead>
               <tr>
                 <th>기간</th>

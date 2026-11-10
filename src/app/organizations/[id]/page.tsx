@@ -21,7 +21,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
     <div className="flex flex-col gap-6">
       <nav className="text-xs text-muted" aria-label="경로">
         <Link href="/organizations" className="hover:text-primary">AI 점검</Link> <span aria-hidden="true">›</span>{" "}
-        <Link href="/organizations" className="hover:text-primary">AI 기관 살펴보기</Link> <span aria-hidden="true">›</span> {org.name}
+        <Link href="/organizations" className="hover:text-primary">기관 살펴보기</Link> <span aria-hidden="true">›</span> {org.name}
       </nav>
 
       <header>
@@ -36,7 +36,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
 
       <section className="rounded-xl border border-line bg-card p-5">
         <h2 className="text-base font-bold">AI가 읽은 데이터 ① 연도별 결산 공시</h2>
-        <p className="mt-1 text-xs text-muted">막대는 기부금 수입 대비 사용 비율입니다. 사업비, 운영비, 모금비용, 이월 잔액(점선) 순입니다.</p>
+        <p className="mt-1 text-xs text-muted">막대는 기부금 수입 대비 사용 비율입니다. 수혜자에게 간 돈, 운영비, 모금에 쓴 돈, 다음 해로 넘긴 남은 돈(점선) 순입니다.</p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
@@ -44,7 +44,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
                 <th className="py-2 pr-3 font-semibold">연도</th>
                 <th className="py-2 pr-3 text-right font-semibold">수입</th>
                 <th className="w-[38%] py-2 pr-3 font-semibold">사용 비율</th>
-                <th className="py-2 pr-3 text-right font-semibold">모금비용(한도)</th>
+                <th className="py-2 pr-3 text-right font-semibold">모금에 쓴 돈(한도)</th>
                 <th className="py-2 pr-3 text-right font-semibold">공시 지연</th>
                 <th className="py-2 font-semibold">외부감사</th>
               </tr>

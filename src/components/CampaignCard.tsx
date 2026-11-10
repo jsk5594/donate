@@ -7,9 +7,9 @@ import type { CampaignSummary } from "@/lib/types";
 export function CampaignCard({ s }: { s: CampaignSummary }) {
   const t = s.sheet.inflow.total || 1;
   const bars = [
-    { v: s.sheet.outflow.program, c: "var(--out-program)", l: "기부됨" },
+    { v: s.sheet.outflow.program, c: "var(--out-program)", l: "수혜자에게 간 돈" },
     { v: s.sheet.outflow.admin, c: "var(--out-admin)", l: "운영비" },
-    { v: s.sheet.outflow.fundraising, c: "var(--out-fundraising)", l: "모금비용" },
+    { v: s.sheet.outflow.fundraising, c: "var(--out-fundraising)", l: "모금에 쓴 돈" },
     { v: s.sheet.outflow.balance, c: "var(--out-balance)", l: "잔액" },
   ];
   return (
@@ -36,7 +36,7 @@ export function CampaignCard({ s }: { s: CampaignSummary }) {
         {s.campaign.status === "예정" ? (
           <span>모집 시작 {fmtDate(s.campaign.startDate)} · 마감 {fmtDate(s.campaign.endDate)}</span>
         ) : (
-          <span>기부됨 {pct(s.sheet.outflow.program / t, 0)} · 운영비 {pct(s.sheet.outflow.admin / t)} · 모금 {pct(s.sheet.outflow.fundraising / t)}</span>
+          <span>수혜자에게 {pct(s.sheet.outflow.program / t, 0)} · 운영비 {pct(s.sheet.outflow.admin / t)} · 모금 {pct(s.sheet.outflow.fundraising / t)}</span>
         )}
         <StatusBadge status={s.campaign.status} />
       </div>
