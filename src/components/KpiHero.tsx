@@ -73,7 +73,7 @@ export function KpiHero({ y, children }: { y: YearSummary; children?: ReactNode 
             {parts.map((p) => (
               <li key={p.label} className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm" style={{ background: p.color }} aria-hidden="true" />
-                <span className="w-16 text-[#B9C4D3]">{p.label}</span>
+                <span className="min-w-[6.5rem] whitespace-nowrap text-[#B9C4D3]">{p.label}</span>
                 <span className="tnum">{pct(p.value / total)}</span>
               </li>
             ))}

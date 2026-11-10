@@ -68,7 +68,7 @@ export function HeaderNav() {
     <nav ref={navRef} aria-label="주요 메뉴" className="ml-auto flex flex-wrap items-center gap-1 text-sm">
       {NAV.map((n) => {
         const active = isActive(n);
-        const top = `flex items-center gap-1 rounded-lg px-3 py-2 ${active ? "bg-primary font-semibold text-white" : "text-foreground hover:bg-primary-soft hover:text-primary"}`;
+        const top = `flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 ${active ? "bg-primary font-semibold text-white" : "text-foreground hover:bg-primary-soft hover:text-primary"}`;
         if (!n.items) {
           return (
             <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={top}>

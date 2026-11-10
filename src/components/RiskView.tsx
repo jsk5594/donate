@@ -143,7 +143,7 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
           )}
         </header>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] border-collapse text-sm">
+          <table className="w-full min-w-[1120px] border-collapse text-sm">
             <thead>
               <tr className="bg-risk-amber text-left text-xs text-risk-ink">
                 <SortTh {...th("score")} className="px-4">투명도지수</SortTh>
@@ -152,7 +152,7 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
                 <SortTh {...th("program")} right>수혜자에게 간 돈</SortTh>
                 <SortTh {...th("admin")} right>운영비</SortTh>
                 <SortTh {...th("fundraising")} right>모금에 쓴 돈</SortTh>
-                <SortTh {...th("balance")} right>잔액</SortTh>
+                <SortTh {...th("balance")} right>남은 돈</SortTh>
                 <SortTh {...th("disclosed")}>마지막 공개</SortTh>
                 <th className="px-4 py-2.5 font-semibold">판정 사유</th>
               </tr>
@@ -170,9 +170,9 @@ export async function RiskView({ params }: { params: { y?: string | string[]; s?
                 return (
                   <tr key={s.campaign.id} className={`align-top hover:bg-risk-hover ${bad ? "bg-risk-row-bad" : "bg-risk-row-warn"}`}>
                     <td className={`border-l-4 px-4 py-3 ${bad ? "border-l-risk-mark-bad" : "border-l-risk-mark-warn"}`}><ScoreBadge score={s.health.score} level={s.health.overall} /></td>
-                    <td className="px-4 py-3">
-                      <Link href={`/campaigns/${s.campaign.id}`} className="font-semibold hover:text-risk-ink">{s.campaign.title}</Link>
-                      <div className="mt-0.5 flex items-center gap-2 text-xs text-muted"><StatusBadge status={s.campaign.status} warm />{s.campaign.organizer}</div>
+                    <td className="min-w-[290px] px-4 py-3">
+                      <Link href={`/campaigns/${s.campaign.id}`} className="whitespace-nowrap font-semibold hover:text-risk-ink">{s.campaign.title}</Link>
+                      <div className="mt-0.5 flex items-center gap-2 whitespace-nowrap text-xs text-muted"><StatusBadge status={s.campaign.status} warm />{s.campaign.organizer}</div>
                     </td>
                     <td className="px-3 py-3 text-right tnum">{wonShort(s.sheet.inflow.total)}</td>
                     <td className="px-3 py-3 text-right tnum">{pct(s.sheet.outflow.program / t)}</td>
