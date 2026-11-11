@@ -1,5 +1,5 @@
 /**
- * 근거 법령 원문·월간 점검 결과 — scripts/sync-rules.mjs 가 매월 새로 쓰는 data/*.json 을 읽음
+ * 근거 법령 원문·점검 결과 — npm run rules:sync(scripts/sync-rules.mjs)가 새로 쓰는 data/*.json 을 읽음
  * 법령이 개정되면 이 파일들이 바뀌고, 세칙 상세 화면의 '관련 법령 원문'과 AI 기부 도우미 근거가 함께 갱신됩니다.
  */
 

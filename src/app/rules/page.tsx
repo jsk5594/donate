@@ -27,7 +27,7 @@ export default function RulesPage() {
             {pending.length ? `근거 법령 변경 ${pending.length}건 · 검토 중` : "근거 법령 변경 없음"}
           </span>
           <span>
-            {RULE_SYNC.schedule} 자동 점검 · 마지막 확인 {fmtDate(RULE_SYNC.checkedAt)} · {LAWS.map((l) => `${lawLabel(l)}(시행 ${l.effective})`).join(", ")}
+            근거 법령 점검 · 마지막 확인 {fmtDate(RULE_SYNC.checkedAt)} · {LAWS.map((l) => `${lawLabel(l)}(시행 ${l.effective})`).join(", ")}
           </span>
         </p>
       </header>

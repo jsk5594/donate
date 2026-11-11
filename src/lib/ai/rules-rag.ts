@@ -2,7 +2,7 @@
  * 운영 세칙(법령 근거 포함) 검색 — 기부 도우미가 AI로 답할 때 근거 조문을 찾아 붙이는 RAG의 검색 단계
  *
  * - 문서: 운영 세칙 게시판(RULE_POSTS)의 조문 하나를 한 조각으로 나눔(장 제목·출처 링크 포함)
- *   + 근거 법령 현행 조문(data/law-articles.json, 매월 scripts/sync-rules.mjs 가 갱신)도 한 조문씩 넣음
+ *   + 근거 법령 현행 조문(data/law-articles.json, npm run rules:sync(scripts/sync-rules.mjs)가 갱신)도 한 조문씩 넣음
  * - 검색: 한국어는 띄어쓰기·조사가 다양하므로 글자 2개 단위(bigram)로 쪼갠 BM25 점수 + 조문 번호·법률명 가산
  * - 별도 임베딩 키 없이 동작하고(OpenAI·Gemini·Claude 어느 제공자든 같은 결과), 서버 시작 후 한 번만 색인함
  */
