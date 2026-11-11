@@ -15,6 +15,7 @@ export interface MapCampaign {
   title: string;
   region: string;
   organizer: string;
+  registrationNo: string;
   purpose: string;
   status: CampaignStatus;
   sidos: Sido[];
@@ -30,6 +31,13 @@ export interface MapCampaign {
   score: number | null;
   level: HealthLevel;
 }
+
+/**
+ * 기부 참여 창구 — 모집건마다 실제 모금 페이지가 생기면 DONATE_URLS 에 넣으면 그 주소로 바로 연결됩니다.
+ * 없으면 1365 기부포털(행정안전부) '기부모집활동' 목록으로 보내고, 모집기관·등록번호로 찾도록 안내합니다.
+ */
+const DONATE_URLS: Record<string, string> = {};
+const DONATE_FALLBACK = "https://www.1365.go.kr/dntn/ctrr/ctrrList.do";
 
 /** 재난 단계: 모금 중 → 모금 끝·기부금 쓰는 중 → 다 쓰고 정산 완료 */
 export const PHASES = ["도움 필요", "복구 진행", "복구 완료"] as const;
@@ -420,6 +428,37 @@ function CampaignRow({ c, phase }: { c: MapCampaign; phase: Phase }) {
           </>
         )}
       </p>
+      {phase === "도움 필요" && <DonateLink c={c} />}
     </li>
+  );
+}
+
+/** 도움 필요 모집건의 기부 참여 버튼(모집 시작 전이면 시작일 안내) */
+function DonateLink({ c }: { c: MapCampaign }) {
+  if (c.status === "예정") {
+    return (
+      <p className="mt-2 rounded-md border border-dashed border-line px-2.5 py-2 text-center text-xs text-muted">
+        {fmtDate(c.startDate)}부터 기부에 참여할 수 있습니다
+      </p>
+    );
+  }
+  const own = DONATE_URLS[c.id];
+  return (
+    <div className="mt-2">
+      <a
+        href={own ?? DONATE_FALLBACK}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center justify-center gap-1 rounded-md bg-[#D9483B] px-3 py-2 text-sm font-bold text-white transition hover:bg-[#B3372C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D9483B]"
+        aria-label={`${c.title} 기부 참여하기(새 창)`}
+      >
+        기부 참여하기 <span aria-hidden="true">↗</span>
+      </a>
+      {!own && (
+        <p className="mt-1 text-center text-[11px] leading-snug text-muted">
+          1365 기부포털에서 <b className="font-semibold text-foreground">{c.organizer}</b> · 등록번호 <span className="tnum">{c.registrationNo}</span>로 찾아 참여합니다
+        </p>
+      )}
+    </div>
   );
 }

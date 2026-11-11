@@ -59,6 +59,7 @@ export default async function HomePage() {
       title: s.campaign.title,
       region: s.campaign.region,
       organizer: s.campaign.organizer,
+      registrationNo: s.campaign.registrationNo,
       purpose: s.campaign.purpose,
       status: s.campaign.status,
       sidos: sidosOf(s.campaign.region),
