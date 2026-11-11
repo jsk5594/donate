@@ -3,22 +3,33 @@
 들어온 돈 = 나간 돈(수혜자에게 간 돈·운영비·모금에 쓴 돈) + 남은 돈. 회계 용어로는 기부받은 돈(차변) = 사업수행비용·일반관리비용·모금비용 + 미집행 잔액(대변)입니다.
 모든 모집건을 **대차대조표 형식**으로 공개하고, 운영 세칙(기부금품법 등 국내 법령 + 해외 기준)으로 자동 판정하며, AI가 지출 내용과 모집기관 이력을 검토하는 서비스입니다.
 
-- 접속 주소: https://donation-cctv.vercel.app
+- 접속 주소: http://localhost:3000 (별도 서버 배포 없이 PC에서 로컬 실행. 아래 [실행](#실행) 참고)
 - 화면에는 서비스 문구만 두고, 시연·데이터에 관한 설명은 이 문서의 [시연 및 데이터 안내](#시연-및-데이터-안내)에 모았습니다.
+
+## 주요 기능
+
+1. **대차대조표·투명도 점수**: 모집건마다 '기부받은 돈 = 쓰인 돈 + 남은 돈'을 공개하고, 운영 세칙 7개 기준(법정 모금비용 한도 등)으로 자동 판정해 0~100점으로 표시
+2. **AI 모집 목적 점검**: 모집 목적과 지출 내용의 의미를 대조해 확인이 필요한 지출과 기관에 물어볼 질문 제시
+3. **AI 지출 패턴 점검**: 분할 결제·증빙번호 중복 등 8가지 기준으로 고르고 확인이 필요한 이유 설명
+4. **AI 기관 살펴보기**: 5년 결산 공시·외부감사·처분 이력으로 신뢰 등급과 점검 의견 제시
+5. **AI 결산 보고서**: 원장과 금액·비율을 대조 검증한 뒤 자동 게시
+6. **기부 도우미(챗봇)·기부내역 조회**: 가명처리된 원장과 운영 세칙·법령 원문(RAG)을 근거로 답변, 기부코드로 내 기부금 사용처 조회
+7. **재난 피해지 긴급 모금 지도**: 재난 모집건을 단계별로 지도에 표시하고 기부 참여 창구로 연결
 
 ## 실행
 
 ```bash
+git clone [공공GitLab 프로젝트 주소]   # 내려받은 폴더로 이동
 npm install
-npm run dev        # http://localhost:3000
-npm run build && npm start
+npm run build && npm start   # 브라우저에서 http://localhost:3000 접속
+npm run dev                  # (개발 모드)
 ```
 
-Node 22.13+ 필요(내장 `node:sqlite` 사용). 외부 서비스 없이 바로 실행됩니다.
+Node 22.13+ 필요(내장 `node:sqlite` 사용). DB·외부 서비스 없이 바로 실행되며, AI·뉴스 API 키가 없어도 모든 화면이 작동합니다(AI 결과는 '자동 분석'으로 표시). AI를 연결하려면 `.env.example`을 `.env.local`로 복사해 키를 넣습니다([AI 연결](#ai-연결) 참고).
 
 ```bash
 npm run db:seed    # 5개년 데이터를 data/donation-flow.db(SQLite)로 다시 생성
-npm run rules:sync # 운영 세칙 근거 법령·자료를 지금 점검(평소에는 매월 1일 자동)
+npm run rules:sync # 운영 세칙 근거 법령·자료를 점검하고 법령 원문 갱신
 ```
 
 앱은 이 DB 파일을 읽기 전용으로 열고, 파일이 없으면 생성기(`mock-data.ts`)로 대체합니다.
@@ -46,7 +57,7 @@ npm run rules:sync # 운영 세칙 근거 법령·자료를 지금 점검(평소
 | `/reports`, `/reports/[id]` | **AI 결산 보고서**: 집행 완료 건을 자동 작성, 금액·비율을 원장과 대조해 통과하면 완료 7일 뒤 게시 |
 | `/donations` | 기부내역: 함께 만든 결과, 나의 기부내역(기부코드 조회, `?code=`로 바로 조회), 우수기부자, 꾸준한 동행, 기부자들이 남긴 말 |
 | `/donations/messages` | 기부자들이 남긴 말 모아보기(항목별) |
-| `/rules`, `/rules/[slug]` | 기부금 운영 세칙 게시판(제1장~제11장). 목록 위에 근거 법령 자동 점검 결과(마지막 확인일, 법령별 시행일, 변경 여부), 각 장에 그 장이 인용한 **법령 원문**(매월 자동 갱신)과 개정 시 '세칙 검토 중' 안내 |
+| `/rules`, `/rules/[slug]` | 기부금 운영 세칙 게시판(제1장~제11장). 목록 위에 근거 법령 자동 점검 결과(마지막 확인일, 법령별 시행일, 변경 여부), 각 장에 그 장이 인용한 **법령 원문**(`npm run rules:sync`로 갱신)과 개정 시 '세칙 검토 중' 안내 |
 | (모든 화면) | **기부 도우미** 챗봇: 기부코드·모집건·기관을 질문에서 찾아 원장을 조회하고 그 데이터로만 답변. AI 키가 있으면 운영 세칙(법령 근거 포함) 조문을 검색해 함께 넘기고(RAG) 답에 조문 출처와 세칙 링크를 붙임 |
 | `/api/live`, `/api/my`, `/api/campaigns/[id]`, `/api/chat`, `/api/organizations/[id]/audit`, `/api/ai-check/purpose/[id]`, `/api/ai-check/anomaly/[id]` | 전광판·본인조회·오픈API·챗봇·기관 점검·지출 점검 |
 
@@ -92,9 +103,9 @@ src/lib/ai/purpose-audit.ts AI 점검 › 모집 목적 점검
 src/lib/ai/anomaly-audit.ts AI 점검 › 지출 패턴 점검(통계 선별 + AI 설명)
 src/lib/ai/assistant.ts     기부 도우미 챗봇
 src/lib/ai/rules-rag.ts     운영 세칙·법령 원문 조문 검색(RAG): 조문 단위 조각 + 글자 2개 단위 BM25, 임베딩 키 불필요
-src/lib/law-sync.ts         근거 법령 원문·월간 점검 결과 읽기(data/law-articles.json, data/rules-sync.json)
-scripts/sync-rules.mjs      근거 법령·자료 월간 점검(npm run rules:sync)
-.github/workflows/sync-rules.yml  매월 1일 09:00(KST) 자동 점검 → 변경분 커밋 + 검토 이슈
+src/lib/law-sync.ts         근거 법령 원문·점검 결과 읽기(data/law-articles.json, data/rules-sync.json)
+scripts/sync-rules.mjs      근거 법령·자료 점검(npm run rules:sync)
+.github/workflows/sync-rules.yml  (선택) GitHub에 올렸을 때 매월 1일 자동 점검용
 src/lib/ai/report-writer.ts AI 결산 보고서 생성·검증·게시
 scripts/seed-db.mjs         생성기 → SQLite 저장(npm run db:seed)
 scripts/build-korea-map.mjs 시·도 경계 → 지도 경로(광주·전남은 한 구역으로 합침)
@@ -153,15 +164,15 @@ scripts/build-korea-map.mjs 시·도 경계 → 지도 경로(광주·전남은 
 3. **가명처리는 반드시 저장소 계층에서** `toPublicDonation` / `toPublicExpense`를 거쳐 내보냅니다. 원본 이름·연락처는 API 응답과 React 컴포넌트에 전달되지 않습니다.
 4. 전광판은 `getLiveDonations()`를 "최근 N건 DESC" 쿼리로 바꾸면 됩니다.
 
-## 운영 세칙 자동 갱신(월 1회)
+## 운영 세칙 근거 법령 점검
 
-법령이 바뀌면 세칙 근거도 따라 바뀌어야 하므로, 매월 1일 GitHub Actions가 `scripts/sync-rules.mjs`를 실행합니다.
+법령이 바뀌면 세칙 근거도 따라 바뀌어야 하므로, `npm run rules:sync`(`scripts/sync-rules.mjs`)로 근거 법령과 자료를 다시 확인합니다. 인터넷 연결이 필요하며, 실행하지 않아도 저장소에 들어 있는 조문(`data/law-articles.json`)으로 화면이 작동합니다.
 
-1. **법령 원문 자동 반영**: 기부금품법·같은 법 시행령·재해구호법·고향사랑기부금법의 현행 조문을 가져와 `data/law-articles.json`을 새로 씁니다. 조문 단위로 이전 것과 비교해 바뀐 조문 번호를 기록합니다. 세칙 상세의 '관련 법령 원문'과 기부 도우미(RAG)가 이 파일을 읽으므로 커밋·재배포되면 바로 새 조문이 쓰입니다.
+1. **법령 원문 반영**: 기부금품법·같은 법 시행령·재해구호법·고향사랑기부금법의 현행 조문을 가져와 `data/law-articles.json`을 새로 씁니다. 조문 단위로 이전 것과 비교해 바뀐 조문 번호를 기록합니다. 세칙 상세의 '관련 법령 원문'과 기부 도우미(RAG)가 이 파일을 읽으므로, 서버를 다시 시작하면 새 조문이 쓰입니다.
 2. **근거 자료 변경 감지**: 각 장의 '근거 자료' 링크(1365기부포털, 법제처 해석 등)를 열어 본문 지문을 비교합니다.
-3. **세칙 본문은 사람이 검토**: 판정 비율 같은 세칙 본문은 해석이 들어가므로 자동으로 고치지 않습니다. 변경이 있으면 해당 장에 '근거 법령이 바뀌었습니다 · 세칙 검토 중'이 뜨고 GitHub 이슈가 열립니다. 검토 후 `data/rules-sync.json`의 해당 항목 `reviewed`를 `true`로 바꾸면 안내가 사라집니다.
+3. **세칙 본문은 사람이 검토**: 판정 비율 같은 세칙 본문은 해석이 들어가므로 자동으로 고치지 않습니다. 변경이 있으면 해당 장에 '근거 법령이 바뀌었습니다 · 세칙 검토 중'이 뜹니다. 검토 후 `data/rules-sync.json`의 해당 항목 `reviewed`를 `true`로 바꾸면 안내가 사라집니다.
 
-예약 실행은 GitHub 기본 브랜치(main)에 있는 워크플로만 동작합니다. Actions 탭에서 'Run workflow'로 바로 돌려 볼 수 있습니다.
+(선택) 저장소를 GitHub에 올리면 `.github/workflows/sync-rules.yml`이 매월 1일 같은 점검을 자동으로 실행합니다. GitLab에서는 동작하지 않으며, 로컬 실행에는 필요 없습니다.
 
 ## 운영 세칙 근거
 
