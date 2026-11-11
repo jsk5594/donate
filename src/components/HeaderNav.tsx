@@ -37,7 +37,7 @@ const NAV: Menu[] = [
 export function HeaderNav() {
   const pathname = usePathname();
   const isActive = (n: Menu) => (n.href === "/" ? pathname === "/" : n.match.some((m) => pathname === m || pathname.startsWith(`${m}/`)));
-  // 클릭(터치)·키보드로 연 하위 메뉴. 마우스는 올리기만 해도 열림(CSS hover)
+  // 클릭(터치)·키보드로 연 하위 메뉴. 마우스는 올리기만 해도 열림(CSS hover), 벗어나면 닫힘
   const [open, setOpen] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
 
@@ -78,7 +78,8 @@ export function HeaderNav() {
         }
         const isOpen = open === n.href;
         return (
-          <div key={n.href} className="group relative">
+          // 마우스가 메뉴 영역(버튼+하위 메뉴)을 벗어나면 클릭으로 연 메뉴도 닫음(터치는 바깥을 눌러 닫음)
+          <div key={n.href} className="group relative" onPointerLeave={(e) => e.pointerType === "mouse" && isOpen && setOpen(null)}>
             {/* 상위 버튼은 이동하지 않고 하위 메뉴만 엶 — 이동은 아래 항목을 골라야 함 */}
             <button
               type="button"
