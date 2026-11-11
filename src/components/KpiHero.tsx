@@ -4,6 +4,7 @@ import { pct, won } from "@/lib/format";
 import type { HealthLevel } from "@/lib/types";
 import { Term } from "@/components/Term";
 import { LEVEL_TEXT } from "@/lib/terms";
+import { TransparencyHelp } from "@/components/TransparencyHelp";
 
 export interface YearSummary {
   year: number;
@@ -44,7 +45,10 @@ export function KpiHero({ y, children }: { y: YearSummary; children?: ReactNode 
     <div className="grid gap-6 md:grid-cols-[minmax(0,1.15fr)_1fr_1fr] md:items-center md:gap-8">
       {/* 핵심: 종합 기부투명도지수 — 칸 가운데 정렬, 오른쪽 구분선 */}
       <div className="flex flex-col items-center md:border-r md:border-white/10 md:pr-8">
-        <div className="mb-2 text-base font-semibold text-white">{y.year}년 종합 <Term k="score" /></div>
+        <div className="mb-2 flex flex-wrap items-center justify-center gap-2 text-base font-semibold text-white">
+          <span>{y.year}년 종합 <Term k="score" /></span>
+          <TransparencyHelp tone="dark" align="center" />
+        </div>
         <div className="flex items-center gap-5">
           <svg
             viewBox="0 0 140 140"

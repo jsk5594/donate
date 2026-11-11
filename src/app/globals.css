@@ -25,7 +25,7 @@
   --warn-bg: #fdf1e5;
   --bad: #b42318;
   --bad-bg: #fdecea;
-  /* 확인 필요 모집건 — 노랑·주황·빨강을 옅게 */
+  /* 투명도 확인이 필요한 모집건 — 노랑·주황·빨강을 옅게 */
   --risk-wash: #fff9f0;
   --risk-line: #f6dfc6;
   --risk-amber: #fff1d2;
@@ -112,7 +112,7 @@ body {
 .bubble-float {
   animation: bubble-float 3.2s ease-in-out infinite;
 }
-/* 기부 지도 상세: 좁은 화면은 지도 위로 올라오고, 넓은 화면은 지도 옆에서 오른쪽으로 펼쳐짐 */
+/* 재난 피해지 긴급 모금 지도 상세: 좁은 화면은 지도 위로 올라오고, 넓은 화면은 지도 옆에서 오른쪽으로 펼쳐짐 */
 @keyframes sheet-open {
   from {
     opacity: 0;
@@ -152,4 +152,30 @@ body {
   .no-print {
     display: none !important;
   }
+}
+
+/* 재난 피해지 긴급 모금 지도: 도움이 필요한 지역의 원이 물결처럼 퍼짐 */
+@keyframes map-pulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+.map-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-pulse 1.8s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-pulse { animation: none; opacity: 0; }
+}
+
+/* 재난 피해지 긴급 모금 지도 카드: 붉은 빛이 천천히 숨 쉬듯 번짐 */
+@keyframes urgent-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(217, 72, 59, 0.35), 0 0 0 4px rgba(217, 72, 59, 0.08); }
+  50% { box-shadow: 0 0 0 1px rgba(217, 72, 59, 0.55), 0 0 0 6px rgba(217, 72, 59, 0.16); }
+}
+.urgent-glow {
+  animation: urgent-glow 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .urgent-glow { animation: none; box-shadow: 0 0 0 1px rgba(217, 72, 59, 0.45), 0 0 0 4px rgba(217, 72, 59, 0.1); }
 }

@@ -39,12 +39,14 @@ function env(name: string): string {
 
 function configOf(id: ProviderId): ProviderConfig {
   const p = ENV_PREFIX[id];
+  const baseUrl = (env(`${p}_BASE_URL`) || DEFAULT_BASE[id]).replace(/\/$/, "");
   return {
     id,
-    label: LABEL[id],
+    // OpenAI 호환 주소로 OpenRouter를 쓰면 화면에도 OpenRouter로 표시
+    label: id === "openai" && baseUrl.includes("openrouter.ai") ? "OpenRouter" : LABEL[id],
     apiKey: env(`${p}_API_KEY`),
     model: env(`${p}_MODEL`) || DEFAULT_MODEL[id],
-    baseUrl: (env(`${p}_BASE_URL`) || DEFAULT_BASE[id]).replace(/\/$/, ""),
+    baseUrl,
   };
 }
 

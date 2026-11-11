@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
 import { RULE_POSTS } from "@/lib/rules-content";
+import { LAWS, RULE_SYNC, lawLabel, pendingChanges } from "@/lib/law-sync";
 
 const CAT_STYLE: Record<string, string> = {
   총칙: "bg-[#E9EDF3] text-foreground",
@@ -12,6 +13,7 @@ const CAT_STYLE: Record<string, string> = {
 };
 
 export default function RulesPage() {
+  const pending = pendingChanges();
   return (
     <div className="flex flex-col gap-6">
       <header>
@@ -19,6 +21,14 @@ export default function RulesPage() {
         <p className="mt-1 max-w-3xl text-sm text-muted">
           기부금품법과 공익법인회계기준을 따릅니다. 법령에 없는 운영비 상한과 사업비 비중은 미국 BBB Wise Giving Alliance 기준을 참고했습니다. 재해구호법, 고향사랑기부금법 등 다른 법률로
           모집한 기부금은 같은 비율을 세칙 기준으로 적용합니다(제2조의2).
+        </p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+          <span className={`rounded-full px-2 py-0.5 font-semibold ${pending.length ? "bg-warn-bg text-warn" : "bg-ok-bg text-ok"}`}>
+            {pending.length ? `근거 법령 변경 ${pending.length}건 · 검토 중` : "근거 법령 변경 없음"}
+          </span>
+          <span>
+            {RULE_SYNC.schedule} 자동 점검 · 마지막 확인 {fmtDate(RULE_SYNC.checkedAt)} · {LAWS.map((l) => `${lawLabel(l)}(시행 ${l.effective})`).join(", ")}
+          </span>
         </p>
       </header>
 

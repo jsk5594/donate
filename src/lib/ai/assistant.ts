@@ -2,7 +2,8 @@
  * 기능 2 — 메인 페이지 챗봇(기부 도우미)
  * 1) 질문에서 기부코드·모집건·주관기관을 찾아 원장에서 필요한 데이터만 조회(가명처리된 Public 데이터만)
  * 2) AI는 그 데이터(컨텍스트)만 근거로 답변 — 데이터에 없으면 모른다고 답함
- * 3) 키가 없으면 같은 컨텍스트로 데모 답변
+ * 3) AI 키가 있으면 질문과 가까운 운영 세칙 조문(법령 근거 포함)을 검색해 함께 넘기고(RAG), 답에 조문 출처를 밝히게 함
+ * 4) 키가 없으면 같은 컨텍스트로 규칙 기반 답변
  */
 
 import { fmtDate, pct, won, wonShort } from "../format";
@@ -12,7 +13,8 @@ import { getRepository, type MyDonationsResult, type Overview } from "../reposit
 import { CHECK_COUNT, fundraisingCapLabel, needsAttention, POLICY, STATUTE } from "../rules";
 import { stageOf, type CampaignSummary } from "../types";
 import { generate, type ChatTurn } from "./client";
-import { DEMO_ENGINE, type EngineInfo } from "./config";
+import { activeProvider, DEMO_ENGINE, type EngineInfo } from "./config";
+import { rulesContext, searchRules, type RuleHit } from "./rules-rag";
 import { computeOrgMetrics, gradeOf } from "./org-audit";
 
 export interface ChatLink {
@@ -121,23 +123,48 @@ const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부 돋보기'의 �
 - 수치는 데이터 값을 그대로 인용하세요. 새로 계산하지 마세요.
 - 기부내역 질문인데 기부코드가 없으면, 기부코드(D-XXXXXXXX, 기부 완료 문자에 포함)를 알려달라고 요청하세요.
 - 실명·연락처를 묻거나 추측하지 마세요. 이름은 가명(김*성) 그대로만 씁니다.
-- 기관을 믿어도 되는지 묻는 질문엔 지표 근거로 답하되, 최종 판단은 기부자 몫임을 존중하고 'AI 점검 > AI 기관 살펴보기' 페이지를 안내하세요.
+- 기관을 믿어도 되는지 묻는 질문엔 지표 근거로 답하되, 최종 판단은 기부자 몫임을 존중하고 'AI 점검 > 기관 살펴보기' 페이지를 안내하세요.
 - 모금비용 한도를 말할 때는 모집건의 근거법률을 확인하세요. 기부금품법이 아닌 모집건(재해구호법·고향사랑기부금법 등)에는 '법정 한도 위반'이라고 하지 말고 '세칙 기준 초과'라고 하세요.
+- 법령·운영 세칙·판정 기준을 묻거나 설명할 때는 [운영 세칙 근거]에 있는 조문만 근거로 삼고, 문장 끝에 (세칙 제6조)·(기부금품법 제13조)처럼 출처를 밝히세요.
+- [운영 세칙 근거]에 없는 법 조문·수치는 지어내지 마세요. 근거가 없으면 '운영 세칙에서 확인되지 않습니다'라고 하고 운영 세칙 페이지나 국가법령정보센터를 안내하세요.
+- 법률 자문처럼 단정하지 말고, 세칙과 법령에 적힌 내용을 전달하세요.
 - 존댓말, 3~6문장, 필요하면 짧은 목록.`;
 
 export async function answer(messages: ChatTurn[]): Promise<ChatReply> {
   const trimmed = messages.slice(-8).map((m) => ({ role: m.role, content: m.content.slice(0, 1000) }));
   const ctx = await buildContext(trimmed);
-  const links = linksFor(ctx);
+  // 운영 세칙 검색(RAG)은 AI가 답할 때만 — 키가 없으면 규칙 기반 답변이라 쓰지 않음
+  const hits: RuleHit[] = activeProvider() ? searchRules(ragQuery(trimmed)) : [];
+  const rules = hits.length ? `\n\n[운영 세칙 근거]\n${rulesContext(hits)}` : "";
 
   const ai = await generate({
-    system: `${SYSTEM}\n\n[조회 데이터]\n${JSON.stringify(contextForPrompt(ctx))}`,
+    system: `${SYSTEM}\n\n[조회 데이터]\n${JSON.stringify(contextForPrompt(ctx))}${rules}`,
     messages: trimmed,
     maxTokens: 700,
     temperature: 0.3,
   });
-  if (ai) return { reply: ai.text, links, engine: ai.engine };
-  return { reply: demoAnswer(trimmed.at(-1)?.content ?? "", ctx), links, engine: DEMO_ENGINE };
+  if (ai) return { reply: ai.text, links: [...linksFor(ctx), ...ruleLinks(hits)], engine: ai.engine };
+  return { reply: demoAnswer(trimmed.at(-1)?.content ?? "", ctx), links: linksFor(ctx), engine: DEMO_ENGINE };
+}
+
+/** 검색어: 마지막 질문이 짧은 되묻기(예: "그건 왜?")면 바로 앞 질문을 붙여 맥락을 살림 */
+function ragQuery(messages: ChatTurn[]) {
+  const users = messages.filter((m) => m.role === "user").map((m) => m.content);
+  const last = users.at(-1) ?? "";
+  return last.length < 15 && users.length > 1 ? `${users.at(-2)} ${last}` : last;
+}
+
+/** 근거로 쓴 세칙 장(최대 2개)으로 가는 링크 */
+function ruleLinks(hits: RuleHit[]): ChatLink[] {
+  const out: ChatLink[] = [];
+  for (const h of hits) {
+    const href = h.slug ? `/rules/${h.slug}` : h.sources[0]?.url;
+    if (!href || out.length >= 2 || out.some((l) => l.href === href)) continue;
+    // 법령 원문 조각은 '근거: 기부금품법 제13조'처럼, 세칙 조각은 장 제목으로(링크는 그 조문이 실린 세칙 장)
+    const label = h.id.startsWith("law:") ? `${h.chapter.replace(/ 원문.*$/, "")} ${h.article.replace(/\(.*$/, "")}` : h.chapter.replace(/\(.*\)$/, "");
+    out.push({ label: `근거: ${label}`, href });
+  }
+  return out;
 }
 
 function linksFor(c: Context): ChatLink[] {

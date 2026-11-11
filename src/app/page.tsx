@@ -13,6 +13,7 @@ import { DonationMap, type MapCampaign } from "@/components/DonationMap";
 import { sidosOf } from "@/lib/regions";
 import { STAGES, stageOf } from "@/lib/types";
 import { CampaignTreeCard, type TreeGroup } from "@/components/CampaignTreeCard";
+import { TransparencyHelp } from "@/components/TransparencyHelp";
 
 export const dynamic = "force-dynamic";
 
@@ -48,25 +49,31 @@ export default async function HomePage() {
       .filter((c) => c.campaigns.length > 0);
     return { phase, count: categories.reduce((a, c) => a + c.campaigns.length, 0), categories };
   });
-  // 기부 지도 카드: 시·도별 모집건
-  const mapItems: MapCampaign[] = overview.campaigns.map((s) => ({
-    id: s.campaign.id,
-    title: s.campaign.title,
-    region: s.campaign.region,
-    organizer: s.campaign.organizer,
-    status: s.campaign.status,
-    stage: stageOf(s.campaign.status),
-    sidos: sidosOf(s.campaign.region),
-    category: s.category.name,
-    goal: s.campaign.goal,
-    received: s.sheet.inflow.total,
-    program: s.sheet.outflow.program,
-    goalRate: goalRate(s.sheet, s.campaign.goal),
-    startDate: s.campaign.startDate,
-    endDate: s.campaign.endDate,
-    score: s.health.score,
-    level: s.health.overall,
-  }));
+  // 재난 피해지 긴급 모금 지도 카드: 재난·재해 모집건만
+  const DAY = 86_400_000;
+  const today = Date.parse(new Date().toISOString().slice(0, 10));
+  const mapItems: MapCampaign[] = overview.campaigns
+    .filter((s) => s.category.id === "disaster")
+    .map((s) => ({
+      id: s.campaign.id,
+      title: s.campaign.title,
+      region: s.campaign.region,
+      organizer: s.campaign.organizer,
+      purpose: s.campaign.purpose,
+      status: s.campaign.status,
+      sidos: sidosOf(s.campaign.region),
+      goal: s.campaign.goal,
+      received: s.sheet.inflow.total,
+      program: s.sheet.outflow.program,
+      spent: s.sheet.outflow.program + s.sheet.outflow.admin + s.sheet.outflow.fundraising,
+      balance: s.sheet.outflow.balance,
+      goalRate: goalRate(s.sheet, s.campaign.goal),
+      startDate: s.campaign.startDate,
+      endDate: s.campaign.endDate,
+      daysLeft: Math.round((Date.parse(s.campaign.endDate.slice(0, 10)) - today) / DAY),
+      score: s.health.score,
+      level: s.health.overall,
+    }));
   const flagged = overview.campaigns.filter(needsAttention).sort((a, b) => (a.health.score ?? 0) - (b.health.score ?? 0));
 
   return (
@@ -83,7 +90,7 @@ export default async function HomePage() {
         <BalanceExplorer sheet={overview.sheet} donations={explorer.donations} donorStats={explorer.stats} expenses={overview.expenses} campaignTitles={titles} height={260} chartMaxWidth={800} />
       </KpiHero>
 
-      {/* 기부 현황 · 기부 지도 · 확인 필요 모집건 3열 (줄 높이는 기부 현황 카드 기준, 기부 지도는 그 높이에 맞춤) */}
+      {/* 기부 현황 · 재난 피해지 긴급 모금 지도 · 투명도 확인이 필요한 모집건 3열 (줄 높이는 기부 현황 카드 기준, 지도는 그 높이에 맞춤) */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <CampaignTreeCard groups={treeGroups} />
 
@@ -97,14 +104,15 @@ export default async function HomePage() {
       <div className="relative xl:h-auto">
       <section className="flex h-full flex-col rounded-xl border border-line bg-card xl:absolute xl:inset-0">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-5">
-          <h2 className="text-base font-bold">지금 확인이 필요한 모집건</h2>
+          <h2 className="whitespace-nowrap text-base font-bold">투명도 확인이 필요한 모집건</h2>
+          <TransparencyHelp align="right" />
           <Link href="/status?tab=risk" className="ml-auto rounded-md px-2 py-1 text-sm font-semibold text-primary hover:bg-primary-soft">
             전체 보기 →
           </Link>
         </header>
         <p className="shrink-0 border-b border-line bg-[#F7F8FA] px-5 py-2 text-xs text-muted">집행이 끝나지 않은 모집건 중 투명도 점수 80점 미만</p>
         {flagged.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-muted">지금 확인이 필요한 모집건이 없습니다.</p>
+          <p className="px-5 py-8 text-center text-sm text-muted">투명도 확인이 필요한 모집건이 없습니다.</p>
         ) : (
           <ul className="min-h-0 flex-1 divide-y divide-line overflow-y-auto">
             {flagged.map((s) => {

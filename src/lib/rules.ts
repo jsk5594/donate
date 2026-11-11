@@ -138,7 +138,7 @@ export function goalRate(sheet: BalanceSheet, goal: number): number {
   return goal ? (sheet.inflow.total - sheet.inflow.other) / goal : 0;
 }
 
-/** 지금 확인이 필요한 모집건 — 돈이 아직 움직이는(집행이 끝나지 않은) 모집건 중 양호가 아닌 건 */
+/** 투명도 확인이 필요한 모집건 — 돈이 아직 움직이는(집행이 끝나지 않은) 모집건 중 양호가 아닌 건 */
 export function needsAttention(s: CampaignSummary): boolean {
   return s.campaign.status !== "예정" && s.campaign.status !== "완료" && s.health.overall !== "양호";
 }

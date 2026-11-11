@@ -1,0 +1,138 @@
+{
+ "checkedAt": "2026-11-11",
+ "schedule": "매월 1일",
+ "sources": [
+  {
+   "url": "https://www.nanumkorea.go.kr/dntn/ctgd/cmgrSystemSmry.do",
+   "title": "1365기부포털 기부활동 가이드: 기부금품법(적용대상·적용 제외·국가 등 모집 제한)",
+   "slugs": [
+    "general",
+    "registration"
+   ],
+   "status": "확인",
+   "hash": "ca09688c4a67372f",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://disclosures.ubuntu-kr.org/meetings/rga2025/2024_재무제표_공익법인회계기준.pdf",
+   "title": "공익법인회계기준 적용 재무제표 사례(운영성과표)",
+   "slugs": [
+    "general"
+   ],
+   "status": "확인",
+   "hash": "32ae310e8ea4b971",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://blog.iquest.co.kr/entry/%EB%B9%84%EC%98%81%EB%A6%AC%EB%B2%95%EC%9D%B8-3",
+   "title": "비영리법인 회계 용어 정리",
+   "slugs": [
+    "general"
+   ],
+   "status": "확인",
+   "hash": "ff37f04ff019a377",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://www.nepla.ai/law/기부금품의-모집-및-사용에-관한-법률",
+   "title": "기부금품의 모집ㆍ사용 및 기부문화 활성화에 관한 법률 (제13조)",
+   "slugs": [
+    "fundraising-cap",
+    "purpose-and-period",
+    "disclosure"
+   ],
+   "status": "조문 단위 점검",
+   "hash": null,
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://www.nanumkorea.go.kr/dntn/ctgd/cmgrRgPrcs.do",
+   "title": "1365기부포털: 기부금품 모집등록(모집비용 충당비율·충당 가능 비용)",
+   "slugs": [
+    "fundraising-cap",
+    "registration",
+    "donor-notice",
+    "reporting"
+   ],
+   "status": "확인",
+   "hash": "4ff72efc0576e41c",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://www.law.go.kr",
+   "title": "국가법령정보센터: 시행령 최신 조문 확인",
+   "slugs": [
+    "fundraising-cap",
+    "reporting"
+   ],
+   "status": "비교 생략(첫 화면)",
+   "hash": null,
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://www.nepla.ai/wiki/복지와-건강/사회복지/-유권해석-기부금품의-모집-사용-및-기부문화-활성화에-관한-법률-제14조-공개의무와-회계감사-등/-법제처-유권해석-모집-및-사용명세-보고서-감사보고서의-작성-범위-및-제출-시기-기부금품의-모집-및-사용에-관한-법률-제14조제3항-등-54gnvyok1n1p",
+   "title": "법제처 유권해석: 모집 및 사용명세 보고서·감사보고서 작성 범위",
+   "slugs": [
+    "disclosure"
+   ],
+   "status": "확인",
+   "hash": "990291d5ceede665",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://www.grfcpa.com/resource/standards-for-accountability/",
+   "title": "BBB Wise Giving Alliance: Standards for Charity Accountability (요약)",
+   "slugs": [
+    "overseas",
+    "admin-cap"
+   ],
+   "status": "확인",
+   "hash": "5713b1fdf1a6563b",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://give.org/",
+   "title": "BBB Wise Giving Alliance (give.org)",
+   "slugs": [
+    "overseas"
+   ],
+   "status": "비교 생략(첫 화면)",
+   "hash": null,
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://www.easylaw.go.kr/CSP/FlDownload.laf?flSeq=1768890204551",
+   "title": "찾기쉬운 생활법령정보: 기부금품 모집제도 해설",
+   "slugs": [
+    "registration",
+    "donor-notice",
+    "reporting"
+   ],
+   "status": "확인",
+   "hash": "016175e92d84991c",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  },
+  {
+   "url": "https://www.nanumkorea.go.kr/dntn/ctgd/cntrIcdt.do",
+   "title": "1365기부포털 기부활동 가이드: 소득공제(세제적격단체)",
+   "slugs": [
+    "donor-notice"
+   ],
+   "status": "확인",
+   "hash": "73ced067aef7d09e",
+   "checkedAt": "2026-11-11",
+   "changedAt": null
+  }
+ ],
+ "changes": []
+}

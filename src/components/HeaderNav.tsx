@@ -16,7 +16,7 @@ const NAV: Menu[] = [
     match: ["/status", "/campaigns", "/categories"],
     items: [
       { href: "/status", label: "기부 현황 조회", desc: "연도·항목·진행상황별 모집건" },
-      { href: "/status?tab=risk", label: "확인 필요 모집건", desc: "기준을 넘었거나 주의가 필요한 모집건" },
+      { href: "/status?tab=risk", label: "투명도 확인이 필요한 모집건", desc: "기준을 넘었거나 주의가 필요한 모집건" },
     ],
   },
   {

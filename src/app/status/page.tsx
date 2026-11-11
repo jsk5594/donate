@@ -36,7 +36,7 @@ interface Row {
   fundraising: number;
 }
 
-/** 기부 현황 — '기부 현황 조회'(연도·항목·진행상황 체크) / '확인 필요 모집건'(위반·주의 모집건) 탭 */
+/** 기부 현황 — '기부 현황 조회'(연도·항목·진행상황 체크) / '투명도 확인이 필요한 모집건'(위반·주의 모집건) 탭 */
 export default async function StatusPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
   if (params.tab === "risk") {
@@ -308,7 +308,7 @@ export default async function StatusPage({ searchParams }: { searchParams: Promi
 
 /** 페이지 제목 — 하위 화면 선택은 상단 메뉴 '기부 살펴보기'에서 함 */
 function StatusHeader({ tab }: { tab: "search" | "risk" }) {
-  return <h1 className="text-2xl font-bold tracking-tight">{tab === "risk" ? "확인 필요 모집건" : "기부 현황 조회"}</h1>;
+  return <h1 className="text-2xl font-bold tracking-tight">{tab === "risk" ? "투명도 확인이 필요한 모집건" : "기부 현황 조회"}</h1>;
 }
 
 function FolderIcon() {

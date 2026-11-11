@@ -50,13 +50,17 @@ ${PLAIN_STYLE}` });
 
 const CALL: Record<ProviderConfig["id"], (p: ProviderConfig, o: GenerateOptions) => Promise<string | undefined>> = {
   async openai(p, o) {
+    // OpenRouter: 추론(reasoning)을 끌 수 없는 모델이 있어, 추론을 짧게 하고 답변 몫의 토큰 여유를 더 줌
+    // (그러지 않으면 추론이 max_tokens를 다 써서 답이 잘리거나 비어 옴)
+    const openRouter = p.baseUrl.includes("openrouter.ai");
     const res = await fetch(`${p.baseUrl}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}`, ...(openRouter ? { "X-Title": "Gibu Dotbogi" } : {}) },
       body: JSON.stringify({
         model: p.model,
         temperature: o.temperature ?? 0.2,
-        max_tokens: o.maxTokens ?? 1500,
+        max_tokens: (o.maxTokens ?? 1500) + (openRouter ? 1500 : 0),
+        ...(openRouter ? { reasoning: { effort: "low" } } : {}),
         ...(o.json ? { response_format: { type: "json_object" } } : {}),
         messages: [{ role: "system", content: o.system }, ...o.messages],
       }),

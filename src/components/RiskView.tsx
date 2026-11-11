@@ -36,7 +36,7 @@ function levelStyle(s: CampaignSummary, key: string) {
 
 const compare = (a: number | string, b: number | string) => (typeof a === "string" || typeof b === "string" ? String(a).localeCompare(String(b), "ko") : a - b);
 
-/** 기부 현황 페이지의 '확인 필요 모집건' 탭 — 위반·주의 모집건 표 (옅은 노랑·주황·빨강 계열) */
+/** 기부 현황 페이지의 '투명도 확인이 필요한 모집건' 탭 — 위반·주의 모집건 표 (옅은 노랑·주황·빨강 계열) */
 export async function RiskView({ params }: { params: { y?: string | string[]; s?: string | string[]; sort?: string | string[]; dir?: string | string[] } }) {
   const overview = await getRepository().getOverview();
   const upcomingCount = overview.campaigns.filter((s) => s.campaign.status === "예정").length;

@@ -27,23 +27,15 @@ export interface TreeGroup {
   categories: TreeCategory[];
 }
 
-const PHASE_DOT: Record<Stage, string> = {
-  진행중: "bg-primary",
-  "진행 예정": "bg-warn",
-  종료: "bg-muted",
-};
-
-/** 메인 페이지 '기부 현황' 카드 — 진행중 / 진행 예정 / 종료를 ‹ › 로 넘겨 보기 */
+/** 메인 페이지 '기부 현황' 카드 — 진행중 / 진행 예정 / 종료를 버튼으로 골라 보기 */
 export function CampaignTreeCard({ groups }: { groups: TreeGroup[] }) {
   const [idx, setIdx] = useState(0);
   // 항목 접힘 상태 (키: "phase/categoryId") — 기본은 모두 펼침
   const [closed, setClosed] = useState<Record<string, boolean>>({});
   const toggle = (key: string) => setClosed((o) => ({ ...o, [key]: !o[key] }));
-  const go = (d: number) => setIdx((i) => (i + d + groups.length) % groups.length);
-  const cur = groups[idx];
 
   return (
-    <section className="flex flex-col rounded-xl border border-line bg-card" aria-roledescription="carousel" aria-label="기부 현황">
+    <section className="flex flex-col rounded-xl border border-line bg-card" aria-label="기부 현황">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-5">
         <h2 className="text-base font-bold">기부 현황</h2>
         <Link href="/status" className="ml-auto rounded-md px-2 py-1 text-sm font-semibold text-primary hover:bg-primary-soft">
@@ -51,23 +43,20 @@ export function CampaignTreeCard({ groups }: { groups: TreeGroup[] }) {
         </Link>
       </header>
 
-      {/* ‹ 진행상황 › */}
-      <div className="flex items-center gap-2 border-b border-line px-3 py-2">
-        <ArrowButton dir="prev" onClick={() => go(-1)} label={`이전: ${groups[(idx - 1 + groups.length) % groups.length].phase}`} />
-        <div className="flex flex-1 flex-col items-center" aria-live="polite">
-          <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${PHASE_DOT[cur.phase]}`} aria-hidden="true" />
-            <h3 className="text-sm font-bold">{cur.phase}</h3>
-            <span className="text-xs text-muted tnum">{cur.count}건</span>
-          </div>
-          <div className="mt-1 flex gap-1.5" aria-hidden="true">
-            {groups.map((x, i) => (
-              <span key={x.phase} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-4 bg-primary" : "w-1.5 bg-line"}`} />
-            ))}
-          </div>
-        </div>
-        <ArrowButton dir="next" onClick={() => go(1)} label={`다음: ${groups[(idx + 1) % groups.length].phase}`} />
-      </div>
+      {/* 진행상황 선택 — 재난 피해지 긴급 모금 지도 카드와 같은 방식 */}
+      <nav className="flex shrink-0 gap-1 border-b border-line px-3 py-2" aria-label="진행상황">
+        {groups.map((g, i) => (
+          <button
+            key={g.phase}
+            type="button"
+            onClick={() => setIdx(i)}
+            aria-pressed={i === idx}
+            className={`flex-1 rounded-md px-2 py-1 text-sm font-semibold ${i === idx ? "bg-primary text-white" : "text-muted hover:bg-primary-soft hover:text-primary"}`}
+          >
+            {g.phase} <span className="tnum">{g.count}</span>
+          </button>
+        ))}
+      </nav>
 
       {/* 세 묶음을 같은 칸에 겹쳐 두고 현재 것만 보이게. 높이는 고정(5개년 종료건이 많아 넘치면 카드 안에서 스크롤) */}
       <div className="grid h-[460px]">
@@ -120,16 +109,6 @@ export function CampaignTreeCard({ groups }: { groups: TreeGroup[] }) {
       ))}
       </div>
     </section>
-  );
-}
-
-function ArrowButton({ dir, onClick, label }: { dir: "prev" | "next"; onClick: () => void; label: string }) {
-  return (
-    <button type="button" onClick={onClick} aria-label={label} title={label} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-muted hover:border-primary hover:text-primary">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" className={dir === "next" ? "rotate-180" : ""}>
-        <path d="M8.5 3L4.5 7l4 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </button>
   );
 }
 
