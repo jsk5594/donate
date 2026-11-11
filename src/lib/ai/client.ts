@@ -55,7 +55,7 @@ const CALL: Record<ProviderConfig["id"], (p: ProviderConfig, o: GenerateOptions)
     const openRouter = p.baseUrl.includes("openrouter.ai");
     const res = await fetch(`${p.baseUrl}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}`, ...(openRouter ? { "X-Title": "Gibu Dotbogi" } : {}) },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}`, ...(openRouter ? { "X-Title": "Gibu Flow" } : {}) },
       body: JSON.stringify({
         model: p.model,
         temperature: o.temperature ?? 0.2,

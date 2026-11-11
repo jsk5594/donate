@@ -28,7 +28,7 @@ export default async function RulePostPage({ params }: { params: Promise<{ slug:
         <h1 className="mt-1 text-2xl font-bold tracking-tight">{post.title}</h1>
         <p className="mt-2 text-sm text-muted">{post.summary}</p>
         <div className="mt-2 text-xs text-muted">
-          게시 {fmtDate(post.publishedAt)} · 기부 돋보기 운영사무국 · 근거 자료 자동 점검 {fmtDate(RULE_SYNC.checkedAt)}
+          게시 {fmtDate(post.publishedAt)} · 기부 플로우 운영사무국 · 근거 자료 자동 점검 {fmtDate(RULE_SYNC.checkedAt)}
         </div>
       </header>
       {pending.length > 0 && (

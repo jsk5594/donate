@@ -129,7 +129,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-muted">기부 돋보기에 등록된 모집건이 없습니다.</p>
+              <p className="mt-3 text-sm text-muted">기부 플로우에 등록된 모집건이 없습니다.</p>
             )}
           </div>
         </div>

@@ -22,7 +22,7 @@ import { RULE_POSTS } from "../src/lib/rules-content.ts";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LAW_FILE = path.join(ROOT, "data", "law-articles.json");
 const SYNC_FILE = path.join(ROOT, "data", "rules-sync.json");
-const UA = "GibuDotbogi-RuleSync/1.0 (+https://github.com/jsk5594/donate)";
+const UA = "GibuFlow-RuleSync/1.0 (+https://github.com/jsk5594/donate)";
 const today = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10); // KST
 
 /** 근거 법령 — short 는 세칙 본문에서 법령을 부르는 이름 */

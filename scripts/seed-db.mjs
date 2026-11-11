@@ -1,6 +1,6 @@
 /**
  * 가상 데이터(5개년)를 SQLite DB 파일로 저장합니다.
- *   npm run db:seed   →  data/donation-dotbogi.db
+ *   npm run db:seed   →  data/donation-flow.db
  * Node 22.13+ 내장 node:sqlite 사용(추가 패키지 없음). 생성기는 src/lib/mock-data.ts(시드 고정).
  */
 import { mkdirSync, rmSync } from "node:fs";
@@ -8,7 +8,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { getDataset, REFERENCE_NOW } from "../src/lib/mock-data.ts";
 
-const file = path.join(process.cwd(), "data", "donation-dotbogi.db");
+const file = path.join(process.cwd(), "data", "donation-flow.db");
 mkdirSync(path.dirname(file), { recursive: true });
 rmSync(file, { force: true });
 

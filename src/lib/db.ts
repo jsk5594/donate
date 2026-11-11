@@ -1,5 +1,5 @@
 /**
- * 임시 DB(SQLite 파일) 읽기 — data/donation-dotbogi.db
+ * 임시 DB(SQLite 파일) 읽기 — data/donation-flow.db
  * - 만들기/다시 만들기: npm run db:seed
  * - 파일이 없으면 가상 데이터 생성기(mock-data.ts)로 대체 → 처음 받은 저장소도 바로 실행됨
  * - 지금은 읽기 전용이며, 서버 시작 후 한 번 읽어 메모리에 둡니다(DB 연결 후 쿼리 단위로 교체).
@@ -10,7 +10,7 @@ import { DatabaseSync } from "node:sqlite";
 import { getDataset, type Dataset } from "./mock-data";
 import type { Campaign, DonationRecord, ExpenseRecord } from "./types";
 
-export const DB_FILE = path.join(process.cwd(), "data", "donation-dotbogi.db");
+export const DB_FILE = path.join(process.cwd(), "data", "donation-flow.db");
 
 type Row = Record<string, string | number | null>;
 const opt = (v: string | number | null) => (v === null ? undefined : String(v));

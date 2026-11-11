@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   cacheComponents: false,
   // 서버리스 배포(Vercel) 시 SQLite 파일을 함수 번들에 포함
   outputFileTracingIncludes: {
-    "/**": ["./data/donation-dotbogi.db"],
+    "/**": ["./data/donation-flow.db"],
   },
   // 개발 서버를 Cloudflare 임시 터널(https://xxxx.trycloudflare.com)로 외부에 보여줄 때 필요
   allowedDevOrigins: ["*.trycloudflare.com"],

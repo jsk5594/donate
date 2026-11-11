@@ -1,4 +1,4 @@
-# 기부 돋보기: 투명한 기부, 따뜻한 세상 (Next.js)
+# 기부 플로우: 투명한 기부, 따뜻한 세상 (Next.js)
 
 들어온 돈 = 나간 돈(수혜자에게 간 돈·운영비·모금에 쓴 돈) + 남은 돈. 회계 용어로는 기부받은 돈(차변) = 사업수행비용·일반관리비용·모금비용 + 미집행 잔액(대변)입니다.
 모든 모집건을 **대차대조표 형식**으로 공개하고, 운영 세칙(기부금품법 등 국내 법령 + 해외 기준)으로 자동 판정하며, AI가 지출 내용과 모집기관 이력을 검토하는 서비스입니다.
@@ -17,7 +17,7 @@ npm run build && npm start
 Node 22.13+ 필요(내장 `node:sqlite` 사용). 외부 서비스 없이 바로 실행됩니다.
 
 ```bash
-npm run db:seed    # 5개년 데이터를 data/donation-dotbogi.db(SQLite)로 다시 생성
+npm run db:seed    # 5개년 데이터를 data/donation-flow.db(SQLite)로 다시 생성
 npm run rules:sync # 운영 세칙 근거 법령·자료를 지금 점검(평소에는 매월 1일 자동)
 ```
 
@@ -74,7 +74,7 @@ npm run rules:sync # 운영 세칙 근거 법령·자료를 지금 점검(평소
 src/lib/types.ts            도메인 타입 (DB 매핑 기준)
 src/lib/mock-data.ts        데이터 생성기(시드 고정, 2022~2026)
 src/lib/audit-plants.ts     생성 후처리: 항목별 적요 정리 + AI 점검 검증 사례(정답 데이터)
-src/lib/db.ts               DB 읽기(data/donation-dotbogi.db, node:sqlite, 읽기 전용)
+src/lib/db.ts               DB 읽기(data/donation-flow.db, node:sqlite, 읽기 전용)
 src/lib/repository.ts       저장소 인터페이스. 페이지는 이 모듈만 호출
 src/lib/pseudonymize.ts     가명처리(김*성, ㈜한*전자) + 기부코드(D-XXXXXXXX)
 src/lib/rules.ts            판정 규칙(7개 기준, 근거 법률별 적용, 투명도 점수)

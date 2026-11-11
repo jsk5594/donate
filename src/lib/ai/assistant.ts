@@ -118,7 +118,7 @@ function contextForPrompt(c: Context) {
   };
 }
 
-const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부 돋보기'의 기부 도우미입니다.
+const SYSTEM = `당신은 기부금 투명성 플랫폼 '기부 플로우'의 기부 도우미입니다.
 - 오직 [조회 데이터]에 있는 내용으로만 답합니다. 없는 정보는 "확인되지 않습니다"라고 말하고 어디서 볼 수 있는지 안내하세요.
 - 수치는 데이터 값을 그대로 인용하세요. 새로 계산하지 마세요.
 - 기부내역 질문인데 기부코드가 없으면, 기부코드(D-XXXXXXXX, 기부 완료 문자에 포함)를 알려달라고 요청하세요.
@@ -226,7 +226,7 @@ function demoAnswer(q: string, c: Context): string {
 
   if (/운영비|모금비|기준|세칙|몇\s*%|한도/.test(q)) {
     return [
-      "기부 돋보기는 다음 기준으로 모집건을 판정합니다.",
+      "기부 플로우는 다음 기준으로 모집건을 판정합니다.",
       `- 운영비: 수입의 ${pct(POLICY.adminRatioBad, 0)} 이하 (${pct(POLICY.adminRatioWarn, 0)} 초과 시 주의)`,
       `- 수혜자에게 간 돈: 쓴 돈의 ${pct(POLICY.programShareMin, 0)} 이상, 권장 ${pct(POLICY.programShareGood, 0)}`,
       "- 모금에 쓴 돈: 기부금품법 시행령 한도(10억 이하 모금 시 15%). 재해구호법·고향사랑기부금법 등 다른 법률 모집건은 같은 비율을 세칙으로 준용",
